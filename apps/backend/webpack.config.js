@@ -9,6 +9,9 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+  externals: {
+    // ESM modules that should not be bundled
+  },
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',
