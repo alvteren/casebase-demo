@@ -1,10 +1,9 @@
-// Uncomment this line to use CSS modules
-// import styles from './app.module.css';
+import '../styles.css';
 import { FileUpload } from './file-upload';
 
 export function App() {
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <FileUpload />
     </div>
   );

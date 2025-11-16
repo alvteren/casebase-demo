@@ -15,6 +15,25 @@ module.exports = {
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
   },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                config: join(__dirname, '../../postcss.config.js'),
+              },
+            },
+          },
+        ],
+      },
+    ],
+  },
   plugins: [
     new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',

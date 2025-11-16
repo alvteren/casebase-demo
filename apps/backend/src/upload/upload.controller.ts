@@ -27,14 +27,14 @@ export class UploadController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<{
     success: boolean;
-    document: {
-      documentId: string;
-      filename: string;
-      contentType: string;
-      size: number;
-      chunkCount: number;
-      uploadedAt: Date;
-    };
+    // document: {
+    //   documentId: string;
+    //   filename: string;
+    //   contentType: string;
+    //   size: number;
+    //   chunkCount: number;
+    //   uploadedAt: Date;
+    // };
     text?: string;
     error?: string;
   }> {
@@ -44,12 +44,11 @@ export class UploadController {
 
     try {
       // Process document (this already extracts text internally)
-      const document = await this.uploadService.processDocument(file);
+      const text = await this.uploadService.extractTextFromFile(file);
 
       return {
         success: true,
-        document,
-        text: document.text,
+        text,
       };
     } catch (error) {
       this.logger.error('Error processing file upload', error);

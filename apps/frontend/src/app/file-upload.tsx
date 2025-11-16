@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 interface UploadResponse {
   success: boolean;
-  document: {
+  document?: {
     documentId: string;
     filename: string;
     contentType: string;
@@ -63,12 +63,15 @@ export function FileUpload() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>File Upload Test</h1>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">File Upload Test</h1>
       
-      <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="file" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+      <form onSubmit={handleSubmit} className="mb-5">
+        <div className="mb-4">
+          <label 
+            htmlFor="file" 
+            className="block mb-2 font-semibold text-gray-700"
+          >
             Select file (PDF, DOCX, or TXT):
           </label>
           <input
@@ -77,73 +80,50 @@ export function FileUpload() {
             accept=".pdf,.docx,.doc,.txt"
             onChange={handleFileChange}
             disabled={loading}
-            style={{ padding: '5px', width: '100%' }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
         </div>
         
         <button
           type="submit"
           disabled={!file || loading}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-          }}
+          className="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
         >
           {loading ? 'Uploading...' : 'Upload File'}
         </button>
       </form>
 
       {error && (
-        <div
-          style={{
-            padding: '15px',
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            borderRadius: '4px',
-            marginBottom: '20px',
-          }}
-        >
-          <strong>Error:</strong> {error}
+        <div className="p-4 mb-5 bg-red-100 border border-red-400 text-red-700 rounded-md">
+          <strong className="font-semibold">Error:</strong> {error}
         </div>
       )}
 
       {result && (
-        <div>
-          <h2>Upload Result</h2>
+        <div className="space-y-5">
+          <h2 className="text-2xl font-bold text-gray-800">Upload Result</h2>
           
-          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#d4edda', borderRadius: '4px' }}>
-            <h3>Document Information</h3>
-            <p><strong>Document ID:</strong> {result.document.documentId}</p>
-            <p><strong>Filename:</strong> {result.document.filename}</p>
-            <p><strong>Content Type:</strong> {result.document.contentType}</p>
-            <p><strong>Size:</strong> {(result.document.size / 1024).toFixed(2)} KB</p>
-            <p><strong>Chunks:</strong> {result.document.chunkCount}</p>
-            <p><strong>Uploaded:</strong> {new Date(result.document.uploadedAt).toLocaleString()}</p>
-          </div>
+          {result.document && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">Document Information</h3>
+              <div className="space-y-2 text-sm">
+                <p><strong className="text-gray-700">Document ID:</strong> <span className="text-gray-600">{result.document.documentId}</span></p>
+                <p><strong className="text-gray-700">Filename:</strong> <span className="text-gray-600">{result.document.filename}</span></p>
+                <p><strong className="text-gray-700">Content Type:</strong> <span className="text-gray-600">{result.document.contentType}</span></p>
+                <p><strong className="text-gray-700">Size:</strong> <span className="text-gray-600">{(result.document.size / 1024).toFixed(2)} KB</span></p>
+                <p><strong className="text-gray-700">Chunks:</strong> <span className="text-gray-600">{result.document.chunkCount}</span></p>
+                <p><strong className="text-gray-700">Uploaded:</strong> <span className="text-gray-600">{new Date(result.document.uploadedAt).toLocaleString()}</span></p>
+              </div>
+            </div>
+          )}
 
           {result.text && (
             <div>
-              <h3>Extracted Text</h3>
-              <div
-                style={{
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  border: '1px solid #dee2e6',
-                  borderRadius: '4px',
-                  maxHeight: '500px',
-                  overflow: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                }}
-              >
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">Extracted Text</h3>
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md max-h-[500px] overflow-auto whitespace-pre-wrap">
                 {result.text || 'No text extracted'}
               </div>
-              <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+              <p className="mt-3 text-sm text-gray-600">
                 <strong>Text length:</strong> {result.text.length} characters
               </p>
             </div>
@@ -153,4 +133,3 @@ export function FileUpload() {
     </div>
   );
 }
-
