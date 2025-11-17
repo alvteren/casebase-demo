@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pinecone } from '@pinecone-database/pinecone';
-import OpenAI from 'openai';
+import { OpenAIService } from '../openai/openai.service';
 
 export interface DocumentMetadata {
   documentId: string;
@@ -25,9 +25,11 @@ export class VectorStoreService implements OnModuleInit {
   private readonly logger = new Logger(VectorStoreService.name);
   private pinecone: Pinecone;
   private index: any;
-  private openai: OpenAI;
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private openaiService: OpenAIService,
+  ) {}
 
   async onModuleInit() {
     try {
@@ -48,16 +50,6 @@ export class VectorStoreService implements OnModuleInit {
       // Get index
       this.index = this.pinecone.index(indexName);
 
-      // Initialize OpenAI client
-      const openaiApiKey = this.configService.get<string>('OPENAI_API_KEY');
-      if (!openaiApiKey) {
-        throw new Error('OPENAI_API_KEY must be set in environment variables');
-      }
-
-      this.openai = new OpenAI({
-        apiKey: openaiApiKey,
-      });
-
       this.logger.log('VectorStoreService initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize VectorStoreService', error);
@@ -69,51 +61,7 @@ export class VectorStoreService implements OnModuleInit {
    * Generate embedding for text using OpenAI
    */
   async generateEmbedding(text: string): Promise<number[]> {
-    try {
-      const response = await this.openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: text,
-      });
-
-      return response.data[0].embedding;
-    } catch (error: any) {
-      // Handle OpenAI API errors
-      if (error?.response) {
-        const statusCode = error.response?.status;
-        const errorMessage = error.response?.data?.error?.message || error.message;
-        
-        if (statusCode === 429) {
-          this.logger.error('OpenAI rate limit exceeded', error);
-          throw new Error(
-            'OpenAI API rate limit exceeded. Please try again later or check your plan limits.'
-          );
-        } else if (statusCode === 401) {
-          this.logger.error('OpenAI authentication failed', error);
-          throw new Error(
-            'OpenAI API authentication failed. Please check your API key in .env file.'
-          );
-        } else if (statusCode === 402 || errorMessage?.includes('quota')) {
-          this.logger.error('OpenAI quota exceeded', error);
-          throw new Error(
-            'OpenAI API quota exceeded. Please check your plan and billing details at https://platform.openai.com/account/billing'
-          );
-        } else if (statusCode === 500 || statusCode === 503) {
-          this.logger.error('OpenAI service unavailable', error);
-          throw new Error(
-            'OpenAI API service is temporarily unavailable. Please try again later.'
-          );
-        } else {
-          this.logger.error(`OpenAI API error (${statusCode}):`, error);
-          throw new Error(`OpenAI API error: ${errorMessage}`);
-        }
-      }
-      
-      // Handle other errors
-      this.logger.error('Failed to generate embedding', error);
-      throw new Error(
-        `Embedding generation failed: ${error?.message || 'Unknown error'}`
-      );
-    }
+    return await this.openaiService.generateEmbedding(text);
   }
 
   /**

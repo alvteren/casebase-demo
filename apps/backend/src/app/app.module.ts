@@ -6,6 +6,7 @@ import { ChatModule } from '../chat/chat.module';
 import { UploadModule } from '../upload/upload.module';
 import { VectorStoreModule } from '../vector-store/vector-store.module';
 import { PdfModule } from '../pdf/pdf.module';
+import { OpenAIModule } from '../openai/openai.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PdfModule } from '../pdf/pdf.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    OpenAIModule,
     ChatModule,
     UploadModule,
     VectorStoreModule,
