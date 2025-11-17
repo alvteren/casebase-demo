@@ -87,13 +87,46 @@ export class VectorStoreService implements OnModuleInit {
       const batchSize = 100;
       for (let i = 0; i < pineconeVectors.length; i += batchSize) {
         const batch = pineconeVectors.slice(i, i + batchSize);
-        await this.index.upsert(batch);
+
+        // Add timeout handling for each batch
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(
+            () => reject(new Error('Pinecone upsert timeout after 15 seconds')),
+            15000,
+          );
+        });
+
+        const upsertPromise = this.index.upsert(batch);
+
+        await Promise.race([upsertPromise, timeoutPromise]);
       }
 
       this.logger.log(`Stored ${vectors.length} vectors in Pinecone`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to store vectors', error);
-      throw new Error(`Vector storage failed: ${error.message}`);
+
+      // Handle timeout errors
+      if (error.message?.includes('timeout')) {
+        throw new Error(
+          'Vector database storage timed out. Please try again later.',
+        );
+      }
+
+      // Handle connection errors
+      if (
+        error.message?.includes('ECONNREFUSED') ||
+        error.message?.includes('ENOTFOUND') ||
+        error.message?.includes('network')
+      ) {
+        throw new Error(
+          'Unable to connect to vector database. Please check your connection and try again.',
+        );
+      }
+
+      // Generic error
+      throw new Error(
+        `Vector storage failed: ${error.message || 'Unknown error'}`,
+      );
     }
   }
 
@@ -116,18 +149,50 @@ export class VectorStoreService implements OnModuleInit {
         queryRequest.filter = filter;
       }
 
-      const response = await this.index.query(queryRequest);
+      // Add timeout handling
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error('Pinecone query timeout after 10 seconds')),
+          10000,
+        );
+      });
+
+      const queryPromise = this.index.query(queryRequest);
+
+      const response = await Promise.race([queryPromise, timeoutPromise]);
 
       return (
-        response.matches?.map((match: any) => ({
+        (response as any).matches?.map((match: any) => ({
           id: match.id,
           score: match.score || 0,
           metadata: match.metadata || {},
         })) || []
       );
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to perform similarity search', error);
-      throw new Error(`Similarity search failed: ${error.message}`);
+
+      // Handle timeout errors
+      if (error.message?.includes('timeout')) {
+        throw new Error(
+          'Vector database query timed out. Please try again later.',
+        );
+      }
+
+      // Handle connection errors
+      if (
+        error.message?.includes('ECONNREFUSED') ||
+        error.message?.includes('ENOTFOUND') ||
+        error.message?.includes('network')
+      ) {
+        throw new Error(
+          'Unable to connect to vector database. Please check your connection and try again.',
+        );
+      }
+
+      // Generic error
+      throw new Error(
+        `Vector search failed: ${error.message || 'Unknown error'}`,
+      );
     }
   }
 

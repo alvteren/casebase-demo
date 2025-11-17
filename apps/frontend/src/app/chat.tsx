@@ -122,11 +122,22 @@ export function Chat() {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
-      setError(errorMessage);
+      
+      // Provide user-friendly error messages
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('timeout')) {
+        userFriendlyMessage = 'Request timed out. Please try again.';
+      } else if (errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
+        userFriendlyMessage = 'API rate limit exceeded. Please wait a moment and try again.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userFriendlyMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      setError(userFriendlyMessage);
       // Add error message to chat
       const errorChatMessage: ChatMessage = {
         role: 'assistant',
-        content: `Error: ${errorMessage}`,
+        content: `Sorry, I encountered an error: ${userFriendlyMessage}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorChatMessage]);
@@ -228,7 +239,7 @@ export function Chat() {
       const data: UploadResponse = await response.json();
       if (data.success && data.document) {
         setSnackbarMessage(
-          `File "${data.document.filename}" uploaded successfully`,
+          `File "${data.document.filename}" uploaded and indexed successfully (${data.document.chunkCount} chunks). You can now ask questions about it!`,
         );
         setSnackbarOpen(true);
       }
@@ -340,8 +351,22 @@ export function Chat() {
                 Start a conversation by asking a question
               </p>
               <p className="text-gray-400 text-sm mt-2">
-                Make sure you've uploaded documents first to get relevant answers
+                Ask general questions or upload documents to ask questions about them
               </p>
+              <div className="mt-4 flex flex-col gap-2 text-xs text-gray-500">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Upload documents to ask questions about them using RAG</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span>Ask general questions without uploading documents</span>
+                </div>
+              </div>
             </div>
           </div>
         )}

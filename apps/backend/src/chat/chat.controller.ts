@@ -11,6 +11,7 @@ import { ChatService, ChatResponse } from './chat.service';
 export interface ChatQueryDto {
   message: string;
   topK?: number;
+  useRAG?: boolean;
 }
 
 @Controller('chat')
@@ -46,8 +47,11 @@ export class ChatController {
         );
       }
 
-      // Run RAG pipeline
-      const result = await this.chatService.query(message, topK);
+      // Use RAG by default, but allow disabling it
+      const useRAG = body.useRAG !== undefined ? body.useRAG : true;
+
+      // Run chat pipeline (RAG or general)
+      const result = await this.chatService.query(message, topK, useRAG);
 
       return {
         success: true,

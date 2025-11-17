@@ -35,45 +35,92 @@ export class ChatService {
 Use the context information to answer the user's question accurately and comprehensively. 
 If the context doesn't contain enough information to answer the question, say so clearly.
 Always cite the source when possible.`;
+
+    // System instruction for general questions
+    this.generalSystemInstruction = `You are a helpful AI assistant. Answer questions clearly and comprehensively. 
+If the question is about uploaded documents, refer to the context provided. 
+Otherwise, use your general knowledge to provide helpful answers.`;
   }
 
+  private readonly generalSystemInstruction: string;
+
   /**
-   * Process a user query through the RAG pipeline
+   * Process a user query through the RAG pipeline or general chat
    */
   async query(
     userMessage: string,
     topK: number = 5,
+    useRAG: boolean = true,
   ): Promise<ChatResponse> {
     try {
       this.logger.log(`Processing query: ${userMessage.substring(0, 50)}...`);
 
-      // Step 1: Embed user query
-      const queryEmbedding = await this.vectorStoreService.generateEmbedding(
-        userMessage,
-      );
+      let searchResults: Array<{ id: string; score: number; metadata: any }> =
+        [];
+      let context = '';
+      let useRAGContext = false;
 
-      // Step 2: Fetch relevant context from Pinecone
-      const searchResults = await this.vectorStoreService.similaritySearch(
-        queryEmbedding,
-        topK,
-      );
+      if (useRAG) {
+        try {
+          // Step 1: Embed user query
+          const queryEmbedding =
+            await this.vectorStoreService.generateEmbedding(userMessage);
 
-      // Step 3: Compose the final prompt
-      const context = this.buildContextFromResults(searchResults);
-      const prompt = this.composePrompt(userMessage, context);
+          // Step 2: Fetch relevant context from Pinecone
+          searchResults = await this.vectorStoreService.similaritySearch(
+            queryEmbedding,
+            topK,
+          );
 
-      // Step 4: Send to OpenAI Chat Completion
-      const messages: ChatMessage[] = [
-        {
+          // Step 3: Check if we have relevant context (score threshold)
+          const relevanceThreshold = 0.5;
+          const relevantResults = searchResults.filter(
+            (r) => r.score >= relevanceThreshold,
+          );
+
+          if (relevantResults.length > 0) {
+            useRAGContext = true;
+            context = this.buildContextFromResults(relevantResults);
+          } else if (searchResults.length > 0) {
+            // Low relevance, but still use context
+            useRAGContext = true;
+            context = this.buildContextFromResults(searchResults);
+          }
+        } catch (error) {
+          this.logger.warn(
+            'Failed to retrieve context from vector store, falling back to general chat',
+            error,
+          );
+          // Fall back to general chat if vector store fails
+        }
+      }
+
+      // Step 4: Compose messages
+      const messages: ChatMessage[] = [];
+
+      if (useRAGContext && context) {
+        // Use RAG with context
+        messages.push({
           role: 'system',
           content: this.systemInstruction,
-        },
-        {
+        });
+        messages.push({
           role: 'user',
-          content: prompt,
-        },
-      ];
+          content: this.composePrompt(userMessage, context),
+        });
+      } else {
+        // Use general chat
+        messages.push({
+          role: 'system',
+          content: this.generalSystemInstruction,
+        });
+        messages.push({
+          role: 'user',
+          content: userMessage,
+        });
+      }
 
+      // Step 5: Send to OpenAI Chat Completion
       const completion = await this.openaiService.createChatCompletion(
         messages,
         {
@@ -85,14 +132,17 @@ Always cite the source when possible.`;
 
       const answer = completion.choices[0]?.message?.content || '';
 
-      // Step 5: Return clean answer with context
+      // Step 6: Return clean answer with context (if available)
       return {
         answer,
-        context: searchResults.map((result) => ({
-          text: result.metadata?.text || '',
-          score: result.score,
-          source: result.metadata?.filename || undefined,
-        })),
+        context:
+          useRAGContext && searchResults.length > 0
+            ? searchResults.map((result) => ({
+                text: result.metadata?.text || '',
+                score: result.score,
+                source: result.metadata?.filename || undefined,
+              }))
+            : undefined,
         tokensUsed: {
           prompt: completion.usage?.prompt_tokens || 0,
           completion: completion.usage?.completion_tokens || 0,
@@ -100,7 +150,7 @@ Always cite the source when possible.`;
         },
       };
     } catch (error) {
-      this.logger.error('Error in RAG pipeline', error);
+      this.logger.error('Error in chat pipeline', error);
       throw error;
     }
   }
