@@ -103,7 +103,7 @@ export class OpenAIService implements OnModuleInit {
     try {
       const completion = await this.client.chat.completions.create({
         model: options?.model || 'gpt-4o-mini',
-        messages: messages as any,
+        messages,
         temperature: options?.temperature ?? 0.7,
         max_tokens: options?.max_tokens ?? 1000,
       });
