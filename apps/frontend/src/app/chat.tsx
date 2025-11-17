@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Snackbar } from './snackbar';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -34,6 +35,19 @@ interface ChatResponse {
   error?: string;
 }
 
+interface UploadResponse {
+  success: boolean;
+  document?: {
+    documentId: string;
+    filename: string;
+    contentType: string;
+    size: number;
+    chunkCount: number;
+    uploadedAt: string;
+  };
+  text?: string;
+}
+
 export function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -41,6 +55,11 @@ export function Chat() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showContext, setShowContext] = useState<{ [key: number]: boolean }>({});
+  const [uploading, setUploading] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -122,6 +141,9 @@ export function Chat() {
       return;
     }
 
+    setGeneratingPdf(true);
+    setError(null);
+
     try {
       const pdfMessages = messages.map((msg) => ({
         role: msg.role,
@@ -156,8 +178,14 @@ export function Chat() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      // Show success message
+      setSnackbarMessage('Chat exported to PDF successfully');
+      setSnackbarOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate PDF');
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -168,32 +196,126 @@ export function Chat() {
     }));
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://localhost:3000/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: response.statusText,
+        }));
+        throw new Error(
+          errorData.message || `Upload failed: ${response.statusText}`,
+        );
+      }
+
+      const data: UploadResponse = await response.json();
+      if (data.success && data.document) {
+        setSnackbarMessage(
+          `File "${data.document.filename}" uploaded successfully`,
+        );
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload file');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">RAG Chat</h1>
-        {messages.length > 0 && (
+        <div className="flex items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.doc,.txt"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            onClick={handleUploadClick}
+            disabled={uploading}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {uploading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                Upload Document
+              </>
+            )}
+          </button>
           <button
             onClick={handleGeneratePdf}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center gap-2"
+            disabled={messages.length === 0 || generatingPdf}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            title={messages.length === 0 ? 'No messages to export' : 'Download chat as PDF'}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            Export PDF
+            {generatingPdf ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Download PDF
+              </>
+            )}
           </button>
-        )}
+        </div>
       </div>
 
       {/* Messages */}
@@ -377,6 +499,13 @@ export function Chat() {
           </button>
         </form>
       </div>
+
+      {/* Snackbar */}
+      <Snackbar
+        message={snackbarMessage}
+        open={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+      />
     </div>
   );
 }
