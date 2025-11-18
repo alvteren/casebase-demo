@@ -7,6 +7,13 @@ module.exports = {
     path: join(__dirname, '../../dist/apps/frontend'),
     clean: true,
   },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    alias: {
+      '@casebase-demo/ui-components': join(__dirname, '../../libs/ui-components/src/index.ts'),
+      '@casebase-demo/api-services': join(__dirname, '../../libs/api-services/src/index.ts'),
+    },
+  },
   devServer: {
     port: 4200,
     historyApiFallback: {
@@ -14,25 +21,6 @@ module.exports = {
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
-  },
-  module: {
-    rules: [
-      {
-        test: /\.css$/,
-        use: [
-          'style-loader',
-          'css-loader',
-          {
-            loader: 'postcss-loader',
-            options: {
-              postcssOptions: {
-                config: join(__dirname, '../../postcss.config.js'),
-              },
-            },
-          },
-        ],
-      },
-    ],
   },
   plugins: [
     new NxAppWebpackPlugin({

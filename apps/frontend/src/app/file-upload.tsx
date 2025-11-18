@@ -1,17 +1,5 @@
 import { useState } from 'react';
-
-interface UploadResponse {
-  success: boolean;
-  document?: {
-    documentId: string;
-    filename: string;
-    contentType: string;
-    size: number;
-    chunkCount: number;
-    uploadedAt: string;
-  };
-  text?: string;
-}
+import { uploadService, UploadResponse } from '@casebase-demo/api-services';
 
 export function FileUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -40,20 +28,7 @@ export function FileUpload() {
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('http://localhost:3000/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
-      }
-
-      const data: UploadResponse = await response.json();
+      const data = await uploadService.uploadFile(file);
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload file');
@@ -109,7 +84,7 @@ export function FileUpload() {
           </div>
           
           {result.document && (
-            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg shadow-sm">
+            <div className="p-6 bg-linear-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +102,7 @@ export function FileUpload() {
                 
                 <div className="bg-white p-4 rounded-lg border border-green-100">
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Filename</div>
-                  <div className="text-sm text-gray-800 break-words">{result.document.filename}</div>
+                  <div className="text-sm text-gray-800 wrap-break-word">{result.document.filename}</div>
                 </div>
                 
                 <div className="bg-white p-4 rounded-lg border border-green-100">
@@ -161,7 +136,7 @@ export function FileUpload() {
               
               <div className="mt-4 p-3 bg-green-100 rounded-lg border border-green-200">
                 <div className="flex items-start gap-2">
-                  <svg className="w-5 h-5 text-green-700 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-700 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div className="text-sm text-green-800">

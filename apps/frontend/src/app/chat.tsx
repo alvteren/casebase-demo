@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Snackbar, Message } from '@casebase-demo/ui-components';
+import { chatService, pdfService, uploadService, ChatResponse, UploadResponse } from '@casebase-demo/api-services';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -17,36 +18,6 @@ interface ChatMessage {
   };
 }
 
-interface ChatResponse {
-  success: boolean;
-  data?: {
-    answer: string;
-    context?: Array<{
-      text: string;
-      score: number;
-      source?: string;
-    }>;
-    tokensUsed?: {
-      prompt: number;
-      completion: number;
-      total: number;
-    };
-  };
-  error?: string;
-}
-
-interface UploadResponse {
-  success: boolean;
-  document?: {
-    documentId: string;
-    filename: string;
-    contentType: string;
-    size: number;
-    chunkCount: number;
-    uploadedAt: string;
-  };
-  text?: string;
-}
 
 export function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -88,25 +59,9 @@ export function Chat() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/chat/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage.content,
-          topK: 5,
-        }),
+      const data = await chatService.query(userMessage.content, {
+        topK: 5,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: response.statusText,
-        }));
-        throw new Error(errorData.message || `Request failed: ${response.statusText}`);
-      }
-
-      const data: ChatResponse = await response.json();
 
       if (data.success && data.data) {
         const assistantMessage: ChatMessage = {
@@ -162,33 +117,15 @@ export function Chat() {
         timestamp: msg.timestamp,
       }));
 
-      const response = await fetch('http://localhost:3000/api/pdf/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: pdfMessages,
-          title: 'Chat Conversation',
-          includeMetadata: true,
-          includeContext: false,
-        }),
+      const blob = await pdfService.generateChatPdf({
+        messages: pdfMessages,
+        title: 'Chat Conversation',
+        includeMetadata: true,
+        includeContext: false,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF');
-      }
-
       // Download PDF
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `chat-${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      pdfService.downloadPdf(blob, `chat-${new Date().toISOString().split('T')[0]}.pdf`);
 
       // Show success message
       setSnackbarMessage('Chat exported to PDF successfully');
@@ -219,24 +156,7 @@ export function Chat() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('http://localhost:3000/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: response.statusText,
-        }));
-        throw new Error(
-          errorData.message || `Upload failed: ${response.statusText}`,
-        );
-      }
-
-      const data: UploadResponse = await response.json();
+      const data = await uploadService.uploadFile(file);
       if (data.success && data.document) {
         setSnackbarMessage(
           `File "${data.document.filename}" uploaded and indexed successfully (${data.document.chunkCount} chunks). You can now ask questions about it!`,

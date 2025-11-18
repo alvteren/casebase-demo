@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@casebase-demo/ui-components": ["libs/ui-components/src/index.ts"]
+      "@casebase-demo/ui-components": ["libs/ui-components/src/index.ts"],
+      "@casebase-demo/api-services": ["libs/api-services/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
