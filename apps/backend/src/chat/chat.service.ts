@@ -51,6 +51,8 @@ Otherwise, use your general knowledge to provide helpful answers.`;
     userMessage: string,
     topK: number = 5,
     useRAG: boolean = true,
+    compressPrompt: boolean = true,
+    maxSummaryTokens: number = 500,
   ): Promise<ChatResponse> {
     try {
       this.logger.log(`Processing query: ${userMessage.substring(0, 50)}...`);
@@ -80,11 +82,19 @@ Otherwise, use your general knowledge to provide helpful answers.`;
 
           if (relevantResults.length > 0) {
             useRAGContext = true;
-            context = this.buildContextFromResults(relevantResults);
+            const rawContext = this.buildContextFromResults(relevantResults);
+            // Compress context to reduce token usage if enabled
+            context = compressPrompt
+              ? await this.compressContext(rawContext, userMessage, maxSummaryTokens)
+              : rawContext;
           } else if (searchResults.length > 0) {
             // Low relevance, but still use context
             useRAGContext = true;
-            context = this.buildContextFromResults(searchResults);
+            const rawContext = this.buildContextFromResults(searchResults);
+            // Compress context to reduce token usage if enabled
+            context = compressPrompt
+              ? await this.compressContext(rawContext, userMessage, maxSummaryTokens)
+              : rawContext;
           }
         } catch (error) {
           this.logger.warn(
@@ -174,6 +184,84 @@ Otherwise, use your general knowledge to provide helpful answers.`;
     });
 
     return contextParts.join('\n\n---\n\n');
+  }
+
+  /**
+   * Compress context by summarizing retrieved chunks to reduce token usage
+   */
+  private async compressContext(
+    context: string,
+    userQuestion: string,
+    maxSummaryTokens: number = 500,
+  ): Promise<string> {
+    try {
+      // If context is already short, skip compression
+      const estimatedTokens = context.length / 4; // Rough estimate: ~4 chars per token
+      if (estimatedTokens <= maxSummaryTokens) {
+        this.logger.log('Context is already short, skipping compression');
+        return context;
+      }
+
+      this.logger.log(
+        `Compressing context (estimated ${Math.round(estimatedTokens)} tokens -> target ${maxSummaryTokens} tokens)`,
+      );
+
+      const compressionPrompt = `You are a context compression assistant. Your task is to summarize the following retrieved document chunks while preserving all information relevant to answering the user's question.
+
+User's question: ${userQuestion}
+
+Retrieved context chunks:
+${context}
+
+Instructions:
+1. Summarize each chunk, keeping only information relevant to the user's question
+2. Preserve key facts, numbers, dates, and specific details
+3. Maintain source attribution (filename) for each summarized chunk
+4. Remove redundant information
+5. Keep the summary concise but comprehensive
+6. Target length: approximately ${maxSummaryTokens} tokens or less
+
+Provide a compressed summary that maintains all relevant information:`;
+
+      const compressionMessages: ChatMessage[] = [
+        {
+          role: 'system',
+          content:
+            'You are an expert at compressing and summarizing text while preserving critical information.',
+        },
+        {
+          role: 'user',
+          content: compressionPrompt,
+        },
+      ];
+
+      const compressionResult =
+        await this.openaiService.createChatCompletion(compressionMessages, {
+          model: 'gpt-4o-mini',
+          temperature: 0.3, // Lower temperature for more consistent summarization
+          max_tokens: maxSummaryTokens + 100, // Allow slightly more for safety
+        });
+
+      const compressedContext =
+        compressionResult.choices[0]?.message?.content || context;
+
+      const compressedTokens = compressedContext.length / 4;
+      const compressionRatio =
+        ((estimatedTokens - compressedTokens) / estimatedTokens) * 100;
+
+      this.logger.log(
+        `Context compressed: ${Math.round(estimatedTokens)} -> ${Math.round(compressedTokens)} tokens (${compressionRatio.toFixed(1)}% reduction)`,
+      );
+
+      return compressedContext;
+    } catch (error) {
+      this.logger.warn(
+        'Failed to compress context, using original context',
+        error,
+      );
+      // Fall back to original context if compression fails
+      return context;
+    }
   }
 
   /**

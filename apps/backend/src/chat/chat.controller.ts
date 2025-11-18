@@ -12,6 +12,8 @@ export interface ChatQueryDto {
   message: string;
   topK?: number;
   useRAG?: boolean;
+  compressPrompt?: boolean; // Enable/disable prompt compression
+  maxSummaryTokens?: number; // Max tokens for compressed context
 }
 
 @Controller('chat')
@@ -50,8 +52,25 @@ export class ChatController {
       // Use RAG by default, but allow disabling it
       const useRAG = body.useRAG !== undefined ? body.useRAG : true;
 
+      // Enable prompt compression by default for token efficiency
+      const compressPrompt = body.compressPrompt !== undefined ? body.compressPrompt : true;
+      const maxSummaryTokens = body.maxSummaryTokens !== undefined ? body.maxSummaryTokens : 500;
+
+      // Validate maxSummaryTokens
+      if (maxSummaryTokens < 100 || maxSummaryTokens > 2000) {
+        throw new BadRequestException(
+          'maxSummaryTokens must be between 100 and 2000',
+        );
+      }
+
       // Run chat pipeline (RAG or general)
-      const result = await this.chatService.query(message, topK, useRAG);
+      const result = await this.chatService.query(
+        message,
+        topK,
+        useRAG,
+        compressPrompt,
+        maxSummaryTokens,
+      );
 
       return {
         success: true,
