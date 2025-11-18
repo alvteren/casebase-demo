@@ -1,46 +1,79 @@
 # UI Components Library
 
-This library contains reusable UI components for the Casebase Demo application.
+This library contains reusable UI components built with shadcn/ui and Tailwind CSS.
 
-## Components
+## Available Components
 
-### Message
-A component for displaying chat messages with support for:
-- User and assistant message styling
-- Context sources display
-- Token usage information
-- Timestamp display
+### shadcn/ui Components
 
-### Snackbar
-A notification component for displaying transient messages with:
-- Auto-dismiss functionality
-- Success styling
-- Close button
+- **Button** - Versatile button component with multiple variants
+- **Input** - Styled input field
+- **Card** - Container component with header, content, and footer
+- **Dialog** - Modal dialog component
+- **ScrollArea** - Custom scrollable area
+
+### Custom Components
+
+- **Message** - Chat message component
+- **Snackbar** - Toast notification component
 
 ## Usage
 
 ```tsx
-import { Message, Snackbar } from '@casebase-demo/ui-components';
+import { Button, Input, Card, Dialog } from '@casebase-demo/ui-components';
 
-// Use Message component
-<Message
-  message={message}
-  index={index}
-  showContext={showContext}
-  onToggleContext={handleToggle}
-/>
+// Button with variants
+<Button variant="default">Click me</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="destructive">Delete</Button>
 
-// Use Snackbar component
-<Snackbar
-  message="Success message"
-  open={isOpen}
-  onClose={handleClose}
-  duration={3000}
-/>
+// Input
+<Input type="text" placeholder="Enter text..." />
+
+// Card
+<Card>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+    <CardDescription>Description</CardDescription>
+  </CardHeader>
+  <CardContent>
+    Content here
+  </CardContent>
+</Card>
+
+// Dialog
+<Dialog>
+  <DialogTrigger>Open</DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Dialog Title</DialogTitle>
+      <DialogDescription>Dialog description</DialogDescription>
+    </DialogHeader>
+  </DialogContent>
+</Dialog>
 ```
 
-## Building
+## Adding New Components
 
-```bash
-nx build ui-components
+To add new shadcn/ui components:
+
+1. Install the required Radix UI dependencies:
+   ```bash
+   npm install @radix-ui/react-[component] --legacy-peer-deps
+   ```
+
+2. Copy the component code from [shadcn/ui](https://ui.shadcn.com/docs/components)
+
+3. Place it in `libs/ui-components/src/lib/[component-name].tsx`
+
+4. Export it from `libs/ui-components/src/index.ts`
+
+## Utilities
+
+The library includes a `cn` utility function for merging Tailwind classes:
+
+```tsx
+import { cn } from '@casebase-demo/ui-components';
+
+<div className={cn('base-class', condition && 'conditional-class')} />
 ```
