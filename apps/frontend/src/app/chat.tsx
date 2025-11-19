@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, cn } from '@casebase-demo/ui-components';
+import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat } from '@casebase-demo/ui-components';
+import { cn } from '@casebase-demo/utils';
 import { chatService, pdfService, uploadService, ChatResponse, UploadResponse } from '@casebase-demo/api-services';
 import { Upload, Download, Send, Loader2 } from 'lucide-react';
 

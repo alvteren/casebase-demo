@@ -70,10 +70,10 @@ To add new shadcn/ui components:
 
 ## Utilities
 
-The library includes a `cn` utility function for merging Tailwind classes:
+The `cn` utility function for merging Tailwind classes is available in the `@casebase-demo/utils` library:
 
 ```tsx
-import { cn } from '@casebase-demo/ui-components';
+import { cn } from '@casebase-demo/utils';
 
 <div className={cn('base-class', condition && 'conditional-class')} />
 ```
