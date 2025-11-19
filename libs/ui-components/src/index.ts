@@ -6,3 +6,4 @@ export * from './lib/card';
 export * from './lib/dialog';
 export * from './lib/scroll-area';
 export * from './lib/empty-chat';
+export * from './lib/documents-dialog';

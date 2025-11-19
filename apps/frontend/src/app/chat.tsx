@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat } from '@casebase-demo/ui-components';
+import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
 import { cn } from '@casebase-demo/utils';
-import { chatService, pdfService, uploadService, ChatResponse, UploadResponse } from '@casebase-demo/api-services';
-import { Upload, Download, Send, Loader2 } from 'lucide-react';
+import { chatService, pdfService, ChatResponse } from '@casebase-demo/api-services';
+import { Download, Send, Loader2, FolderOpen } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -28,11 +28,10 @@ export function Chat() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showContext, setShowContext] = useState<{ [key: number]: boolean }>({});
-  const [uploading, setUploading] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -144,34 +143,9 @@ export function Chat() {
     }));
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setError(null);
-
-    try {
-      const data = await uploadService.uploadFile(file);
-      if (data.success && data.document) {
-        setSnackbarMessage(
-          `File "${data.document.filename}" uploaded and indexed successfully (${data.document.chunkCount} chunks). You can now ask questions about it!`,
-        );
-        setSnackbarOpen(true);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload file');
-    } finally {
-      setUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
+  const handleUploadSuccess = () => {
+    setSnackbarMessage('Document uploaded and indexed successfully!');
+    setSnackbarOpen(true);
   };
 
   return (
@@ -180,30 +154,13 @@ export function Chat() {
       <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">RAG Chat</h1>
         <div className="flex items-center gap-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx,.doc,.txt"
-            onChange={handleFileChange}
-            className="hidden"
-          />
           <Button
-            onClick={handleUploadClick}
-            disabled={uploading}
+            onClick={() => setDocumentsDialogOpen(true)}
             variant="default"
             className="bg-green-600 hover:bg-green-700"
           >
-            {uploading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Uploading...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                Upload Document
-              </>
-            )}
+            <FolderOpen className="w-4 h-4" />
+            Documents Library
           </Button>
           <Button
             onClick={handleGeneratePdf}
@@ -303,6 +260,13 @@ export function Chat() {
         message={snackbarMessage}
         open={snackbarOpen}
         onClose={() => setSnackbarOpen(false)}
+      />
+
+      {/* Documents Dialog */}
+      <DocumentsDialog
+        open={documentsDialogOpen}
+        onOpenChange={setDocumentsDialogOpen}
+        onUploadSuccess={handleUploadSuccess}
       />
     </div>
   );

@@ -74,3 +74,11 @@ Create ChatService that:
 • Pinecone timeouts
 • Invalid or unsupported documents
 • Graceful fallbacks instead of dumping stack traces on the user
+
+12. Documents Library
+• Backend for CRUD with list of documents
+• Frontend: List in dialog. Upload button in the dialog.
+
+13. Store chat history
+
+• CRUD messages in DB

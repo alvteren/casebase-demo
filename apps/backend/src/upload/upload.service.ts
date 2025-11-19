@@ -43,27 +43,22 @@ export class UploadService {
     file: Express.Multer.File,
   ): Promise<UploadedDocument> {
     try {
-      // Validate file
       this.validateFile(file);
 
-      // Generate document ID using Node.js built-in crypto.randomUUID
       const documentId = randomUUID();
 
-      // Extract text based on file type
       const text = await this.extractTextFromFile(file);
 
       if (!text || text.trim().length === 0) {
         throw new BadRequestException('File contains no extractable text');
       }
 
-      // Split text into chunks
       const chunks = this.splitTextIntoChunks(text);
 
       if (chunks.length === 0) {
         throw new BadRequestException('No valid chunks created from document');
       }
 
-      // Generate embeddings and store vectors
       const vectors = [];
       try {
         for (let i = 0; i < chunks.length; i++) {
@@ -88,7 +83,6 @@ export class UploadService {
           });
         }
       } catch (embeddingError) {
-        // Re-throw embedding errors with context
         this.logger.error(
           `Failed to generate embeddings for document ${documentId}`,
           embeddingError,
@@ -96,7 +90,6 @@ export class UploadService {
         throw embeddingError;
       }
 
-      // Store all vectors in Pinecone
       await this.vectorStoreService.storeVectors(vectors);
 
       this.logger.log(
