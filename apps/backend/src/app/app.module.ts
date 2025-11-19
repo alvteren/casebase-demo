@@ -7,6 +7,7 @@ import { UploadModule } from '../upload/upload.module';
 import { VectorStoreModule } from '../vector-store/vector-store.module';
 import { PdfModule } from '../pdf/pdf.module';
 import { OpenAIModule } from '../openai/openai.module';
+import { DocumentsModule } from '../documents/documents.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { OpenAIModule } from '../openai/openai.module';
     UploadModule,
     VectorStoreModule,
     PdfModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -274,4 +274,35 @@ export class VectorStoreService implements OnModuleInit {
       throw new Error(`Get document metadata failed: ${error.message}`);
     }
   }
+
+  /**
+   * Get all unique document IDs from Pinecone
+   * Note: This method uses query with a large topK to get vectors and extract unique documentIds
+   * This may be slow for very large indexes, but works without additional storage
+   * For production, consider maintaining a separate document registry
+   */
+  async getAllDocumentIds(): Promise<string[]> {
+    try {
+      const documentIds = new Set<string>();
+      
+      // Use query with dummy vector and large topK to get as many vectors as possible
+      // Pinecone allows up to 10000 results per query
+      const dummyVector = new Array(1536).fill(0);
+      const maxResults = 10000;
+      
+      const results = await this.similaritySearch(dummyVector, maxResults);
+
+      for (const result of results) {
+        if (result.metadata?.documentId) {
+          documentIds.add(result.metadata.documentId);
+        }
+      }
+
+      this.logger.log(`Found ${documentIds.size} unique documents`);
+      return Array.from(documentIds);
+    } catch (error) {
+      this.logger.error('Failed to get all document IDs', error);
+      throw new Error(`Get all document IDs failed: ${error.message}`);
+    }
+  }
 }
