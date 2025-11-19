@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
 import { cn } from '@casebase-demo/utils';
-import { chatService, pdfService, ChatResponse } from '@casebase-demo/api-services';
-import { Download, Send, Loader2, FolderOpen } from 'lucide-react';
+import { chatService, pdfService, uploadService, ChatResponse } from '@casebase-demo/api-services';
+import { Download, Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -32,6 +32,8 @@ export function Chat() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -148,6 +150,33 @@ export function Chat() {
     setSnackbarOpen(true);
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      await uploadService.uploadFile(file);
+      handleUploadSuccess();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload file';
+      setError(errorMessage);
+      setSnackbarMessage(`Upload failed: ${errorMessage}`);
+      setSnackbarOpen(true);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -235,6 +264,27 @@ export function Chat() {
             disabled={loading}
             className="flex-1"
           />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.doc,.txt"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleUploadClick}
+            disabled={loading || uploading}
+            title="Upload document"
+          >
+            {uploading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Paperclip className="w-4 h-4" />
+            )}
+          </Button>
           <Button
             type="submit"
             disabled={!input.trim() || loading}
