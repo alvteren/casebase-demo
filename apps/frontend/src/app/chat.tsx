@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Snackbar, Message } from '@casebase-demo/ui-components';
+import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, cn } from '@casebase-demo/ui-components';
 import { chatService, pdfService, uploadService, ChatResponse, UploadResponse } from '@casebase-demo/api-services';
+import { Upload, Download, Send, Loader2 } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -124,10 +125,8 @@ export function Chat() {
         includeContext: false,
       });
 
-      // Download PDF
       pdfService.downloadPdf(blob, `chat-${new Date().toISOString().split('T')[0]}.pdf`);
 
-      // Show success message
       setSnackbarMessage('Chat exported to PDF successfully');
       setSnackbarOpen(true);
     } catch (err) {
@@ -175,10 +174,10 @@ export function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">RAG Chat</h1>
+      <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">RAG Chat</h1>
         <div className="flex items-center gap-3">
           <input
             ref={fileInputRef}
@@ -187,161 +186,114 @@ export function Chat() {
             onChange={handleFileChange}
             className="hidden"
           />
-          <button
+          <Button
             onClick={handleUploadClick}
             disabled={uploading}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            variant="default"
+            className="bg-green-600 hover:bg-green-700"
           >
             {uploading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Uploading...</span>
               </>
             ) : (
               <>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
+                <Upload className="w-4 h-4" />
                 Upload Document
               </>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleGeneratePdf}
             disabled={messages.length === 0 || generatingPdf}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            variant="default"
             title={messages.length === 0 ? 'No messages to export' : 'Download chat as PDF'}
           >
             {generatingPdf ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Generating...</span>
               </>
             ) : (
               <>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
+                <Download className="w-4 h-4" />
                 Download PDF
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-        {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <svg
-                className="w-16 h-16 text-gray-400 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <p className="text-gray-500 text-lg">
-                Start a conversation by asking a question
-              </p>
-              <p className="text-gray-400 text-sm mt-2">
-                Ask general questions or upload documents to ask questions about them
-              </p>
-              <div className="mt-4 flex flex-col gap-2 text-xs text-gray-500">
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full px-6 py-4">
+          <div className="space-y-4">
+          {messages.length === 0 && <EmptyChat />}
+
+          {messages.map((message, index) => (
+            <Message
+              key={index}
+              message={message}
+              index={index}
+              showContext={showContext[index] || false}
+              onToggleContext={() => toggleContext(index)}
+            />
+          ))}
+
+          {loading && (
+            <div className="flex justify-start">
+              <Card className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Upload documents to ask questions about them using RAG</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-muted-foreground">Thinking...</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  <span>Ask general questions without uploading documents</span>
-                </div>
-              </div>
+              </Card>
             </div>
+          )}
+
+            <div ref={messagesEndRef} />
           </div>
-        )}
-
-        {messages.map((message, index) => (
-          <Message
-            key={index}
-            message={message}
-            index={index}
-            showContext={showContext[index] || false}
-            onToggleContext={() => toggleContext(index)}
-          />
-        ))}
-
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-gray-600">Thinking...</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
+        </ScrollArea>
       </div>
 
       {/* Error message */}
       {error && (
         <div className="px-6 py-2">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <Card className="bg-destructive/10 border-destructive text-destructive px-4 py-3">
             <strong>Error:</strong> {error}
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-6 py-4">
+      <div className="bg-card border-t border-border px-6 py-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about your documents..."
             disabled={loading}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="flex-1"
           />
-          <button
+          <Button
             type="submit"
             disabled={!input.trim() || loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
+            size="default"
           >
-            {loading ? 'Sending...' : 'Send'}
-          </button>
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                Send
+              </>
+            )}
+          </Button>
         </form>
       </div>
 
