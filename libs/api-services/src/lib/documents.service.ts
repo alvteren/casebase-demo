@@ -19,7 +19,7 @@ export interface DocumentResponse {
 }
 
 export class DocumentsService {
-  private readonly baseUrl = 'http://localhost:3000/api';
+  private readonly baseUrl = (process.env["REACT_APP_BACKEND_URL"]);
 
   /**
    * Get list of all documents
@@ -46,7 +46,8 @@ export class DocumentsService {
       return data;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Cannot connect to server. Please make sure the backend is running on http://localhost:3000');
+        const backendUrl = (process.env["REACT_APP_BACKEND_URL"]);
+        throw new Error(`Cannot connect to server. Please make sure the backend is running on ${backendUrl}`);
       }
       throw error;
     }
@@ -78,7 +79,8 @@ export class DocumentsService {
       return data;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Cannot connect to server. Please make sure the backend is running on http://localhost:3000');
+        const backendUrl = (process.env["REACT_APP_BACKEND_URL"]);
+        throw new Error(`Cannot connect to server. Please make sure the backend is running on ${backendUrl}`);
       }
       throw error;
     }
@@ -107,7 +109,8 @@ export class DocumentsService {
       }
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Cannot connect to server. Please make sure the backend is running on http://localhost:3000');
+        const backendUrl = (process.env["REACT_APP_BACKEND_URL"]);
+        throw new Error(`Cannot connect to server. Please make sure the backend is running on ${backendUrl}`);
       }
       throw error;
     }

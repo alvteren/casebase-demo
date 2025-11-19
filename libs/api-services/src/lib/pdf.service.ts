@@ -12,7 +12,7 @@ export interface PdfGenerationOptions {
 }
 
 export class PdfService {
-  private readonly baseUrl = 'http://localhost:3000/api';
+  private readonly baseUrl = (process.env["REACT_APP_BACKEND_URL"]);
 
   /**
    * Generate PDF from chat conversation

@@ -1,6 +1,7 @@
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   output: {
@@ -39,6 +40,11 @@ module.exports = {
       // Uncomment this line if you don't want to use SVGR
       // See: https://react-svgr.com/
       // svgr: false
+    }),
+    new webpack.DefinePlugin({
+      'process.env.REACT_APP_BACKEND_URL': JSON.stringify(
+        process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000/api'
+      ),
     }),
   ],
 };

@@ -61,6 +61,12 @@ CHUNK_OVERLAP=200
 # Server Configuration
 PORT=3000
 NODE_ENV=development
+
+# Frontend Configuration
+FRONTEND_URL=http://localhost:4200
+
+# Backend URL (for frontend)
+REACT_APP_BACKEND_URL=http://localhost:3000/api
 ```
 
 ### Environment Variables
@@ -85,6 +91,12 @@ NODE_ENV=development
 #### Server Configuration
 - `PORT` (optional) - Backend server port (default: 3000)
 - `NODE_ENV` (optional) - Environment mode: `development` or `production` (default: `development`)
+
+#### Frontend Configuration
+- `FRONTEND_URL` (optional) - Frontend URL for CORS configuration (default: `http://localhost:4200`)
+  - Can be a comma-separated list of URLs for multiple origins
+- `REACT_APP_BACKEND_URL` (optional) - Backend API URL used by frontend (default: `http://localhost:3000/api`)
+  - This variable is used by the frontend to connect to the backend API
 
 **⚠️ Important**: Never commit the `.env` file. It's already included in `.gitignore`.
 

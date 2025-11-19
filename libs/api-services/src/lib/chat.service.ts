@@ -41,7 +41,7 @@ export interface ChatResponse {
 }
 
 export class ChatService {
-  private readonly baseUrl = 'http://localhost:3000/api';
+  private readonly baseUrl = (process.env["REACT_APP_BACKEND_URL"]);
 
   /**
    * Send a chat query to the RAG pipeline

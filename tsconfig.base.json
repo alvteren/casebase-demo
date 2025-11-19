@@ -20,5 +20,6 @@
       "@casebase-demo/utils": ["libs/utils/src/index.ts"]
     }
   },
+  "include": ["env.d.ts"],
   "exclude": ["node_modules", "tmp"]
 }

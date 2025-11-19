@@ -14,7 +14,7 @@ export interface UploadResponse {
 }
 
 export class UploadService {
-  private readonly baseUrl = 'http://localhost:3000/api';
+  private readonly baseUrl = (process.env["REACT_APP_BACKEND_URL"] );
 
   /**
    * Upload a file to the server
