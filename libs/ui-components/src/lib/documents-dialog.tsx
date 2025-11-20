@@ -11,6 +11,7 @@ import { ScrollArea } from './scroll-area';
 import { Card } from './card';
 import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
 import { documentsService, uploadService, DocumentSummary } from '@casebase-demo/api-services';
+import { formatDate } from '@casebase-demo/utils';
 
 interface DocumentsDialogProps {
   open: boolean;
@@ -89,20 +90,6 @@ export function DocumentsDialog({
       setError(err instanceof Error ? err.message : 'Failed to delete document');
     } finally {
       setDeleting(null);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
     }
   };
 
