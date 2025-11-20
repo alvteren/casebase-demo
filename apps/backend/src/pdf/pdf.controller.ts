@@ -2,18 +2,23 @@ import {
   Controller,
   Post,
   Body,
-  Get,
-  Query,
   Res,
   BadRequestException,
   Logger,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { PdfService, ChatMessage, PdfGenerationOptions } from './pdf.service';
+import { PdfService, PdfGenerationOptions } from './pdf.service';
+import { ChatMessage, ContextItem, TokensUsed } from '@casebase-demo/shared-types';
 
 export interface GenerateChatPdfDto {
-  messages: ChatMessage[];
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp?: Date | string;
+    context?: ContextItem[];
+    tokensUsed?: TokensUsed;
+  }>;
   title?: string;
   includeMetadata?: boolean;
   includeContext?: boolean;
@@ -47,19 +52,28 @@ export class PdfController {
         );
       }
 
-      // Validate messages structure
-      for (const message of body.messages) {
-        if (!message.role || !['user', 'assistant'].includes(message.role)) {
+      // Validate and convert messages structure
+      const messages: ChatMessage[] = body.messages.map((msg) => {
+        if (!msg.role || !['user', 'assistant'].includes(msg.role)) {
           throw new BadRequestException(
             'Each message must have a valid role (user or assistant)',
           );
         }
-        if (!message.content || typeof message.content !== 'string') {
+        if (!msg.content || typeof msg.content !== 'string') {
           throw new BadRequestException(
             'Each message must have a content string',
           );
         }
-      }
+        return {
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: msg.timestamp instanceof Date 
+            ? msg.timestamp 
+            : new Date(msg.timestamp || Date.now()),
+          context: msg.context,
+          tokensUsed: msg.tokensUsed,
+        };
+      });
 
       const options: PdfGenerationOptions = {
         title: body.title,
@@ -69,7 +83,7 @@ export class PdfController {
 
       // Generate PDF
       const pdfBuffer = await this.pdfService.generateChatPdf(
-        body.messages,
+        messages,
         options,
       );
 

@@ -12,9 +12,9 @@ import {
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ChatService, ChatResponse } from './chat.service';
+import { ChatService } from './chat.service';
 import { ChatHistoryService } from './chat-history.service';
-import { ChatQueryDto } from '@casebase-demo/shared-types';
+import { ChatQueryDto, ChatResponse } from '@casebase-demo/shared-types';
 
 @Controller('chat')
 export class ChatController {

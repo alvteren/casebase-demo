@@ -16,6 +16,9 @@
     "ui": "libs/ui-components/src/lib",
     "lib": "libs/ui-components/src/lib",
     "hooks": "apps/frontend/src/hooks"
+  },
+  "registries": {
+    "@acme": "https://acme.com/r/{name}.json"
   }
 }
 

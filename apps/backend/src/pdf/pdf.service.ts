@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
-import { Readable } from 'stream';
 import { ChatMessage } from '@casebase-demo/shared-types';
 
 export interface PdfGenerationOptions {
@@ -98,14 +97,25 @@ export class PdfService {
 
           // Timestamp if available
           if (message.timestamp) {
-            doc
-              .fontSize(8)
-              .font('Helvetica')
-              .fillColor('gray')
-              .text(
-                ` - ${new Date(message.timestamp).toLocaleString()}`,
-                { continued: true },
-              );
+            try {
+              const timestamp = message.timestamp instanceof Date 
+                ? message.timestamp 
+                : new Date(message.timestamp);
+              
+              if (!isNaN(timestamp.getTime())) {
+                doc
+                  .fontSize(8)
+                  .font('Helvetica')
+                  .fillColor('gray')
+                  .text(
+                    ` - ${timestamp.toLocaleString()}`,
+                    { continued: true },
+                  );
+              }
+            } catch (error) {
+              // Silently skip timestamp if it's invalid
+              this.logger.warn('Invalid timestamp in message, skipping', error);
+            }
           }
 
           doc.moveDown(0.5);
@@ -159,19 +169,6 @@ export class PdfService {
     context?: Array<{ text: string; score: number; source?: string }>,
     options: PdfGenerationOptions = {},
   ): Promise<Buffer> {
-    const messages: ChatMessage[] = [
-      {
-        role: 'user',
-        content: query,
-        timestamp: new Date(),
-      },
-      {
-        role: 'assistant',
-        content: answer,
-        timestamp: new Date(),
-      },
-    ];
-
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({
