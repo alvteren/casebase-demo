@@ -78,14 +78,13 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
   return (
     <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex justify-end">
         <Button
           onClick={onNewChat}
-          className="w-full"
-          variant="default"
+          variant="outline"
+          size="icon"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          New Chat
+          <Plus className="w-4 h-4" />
         </Button>
       </div>
 
