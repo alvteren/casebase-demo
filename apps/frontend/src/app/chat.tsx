@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
-import { cn, setLastChatId } from '@casebase-demo/utils';
-import { chatService, pdfService, uploadService, ChatResponse } from '@casebase-demo/api-services';
+import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
+import { chatService, pdfService, uploadService } from '@casebase-demo/api-services';
 import { Download, Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
 
 interface ChatMessage {
@@ -40,6 +40,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showContext, setShowContext] = useState<{ [key: number]: boolean }>({});
+  const failedChatIdsRef = useRef<Set<string>>(new Set()); // Track failed chat IDs to prevent retries
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -63,11 +64,23 @@ export function Chat({ chatId: propChatId }: ChatProps) {
         const currentChatId = propChatId;
         
         if (currentChatId) {
+          // If we've already tried this chatId and it failed, don't try again
+          if (failedChatIdsRef.current.has(currentChatId)) {
+            // Clear from localStorage and redirect to new chat
+            clearLastChatId();
+            setChatIdState(null);
+            setMessages([]);
+            navigate('/chat', { replace: true });
+            return;
+          }
+
           try {
             const historyResponse = await chatService.getChatHistory(currentChatId);
             if (historyResponse.success && historyResponse.data) {
               setChatIdState(currentChatId);
               setLastChatId(currentChatId);
+              // Remove from failed list if it was there
+              failedChatIdsRef.current.delete(currentChatId);
               const historyMessages: ChatMessage[] = historyResponse.data.messages.map((msg) => ({
                 role: msg.role,
                 content: msg.content,
@@ -77,9 +90,11 @@ export function Chat({ chatId: propChatId }: ChatProps) {
               }));
               setMessages(historyMessages);
             }
-          } catch (err) {
-            // Chat not found, redirect to new chat (without creating one)
-            // Chat will be created automatically when first message is sent
+          } catch (error) {
+            // Chat not found - mark as failed and clear from localStorage
+            console.error(`Chat ${currentChatId} not found:`, error);
+            failedChatIdsRef.current.add(currentChatId);
+            clearLastChatId();
             setChatIdState(null);
             setMessages([]);
             navigate('/chat', { replace: true });
@@ -90,8 +105,8 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           setChatIdState(null);
           setMessages([]);
         }
-      } catch (err) {
-        console.error('Failed to load chat history:', err);
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
       } finally {
         setLoadingHistory(false);
       }
