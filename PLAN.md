@@ -81,4 +81,9 @@ Create ChatService that:
 
 13. Store chat history
 
-• CRUD messages in DB
+• save chat history in MongoDB, make CRUD for chat history. 
+• make history on frontend in sidebar. make button "create new chat"
+
+14. Improvements
+
+

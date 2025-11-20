@@ -36,7 +36,7 @@ export class ChatController {
     @Body() body: ChatQueryDto,
   ): Promise<{
     success: boolean;
-    data?: ChatResponse;
+    data?: ChatResponse & { chatId?: string };
     error?: string;
   }> {
     try {
@@ -124,7 +124,7 @@ export class ChatController {
         success: true,
         data: {
           ...result,
-          chatId,
+          chatId: chatId as string,
         },
       };
     } catch (error) {

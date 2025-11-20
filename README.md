@@ -18,8 +18,87 @@ This is an Nx monorepo containing:
 
 - Node.js (v18 or higher)
 - npm or yarn
+- Docker and Docker Compose (for MongoDB) - see [Docker Installation](#docker-installation) below
 - OpenAI API key
 - Pinecone API key and index
+
+## Docker Installation
+
+Docker is required to run MongoDB automatically. Follow the instructions for your operating system:
+
+### macOS
+
+**Option 1: Docker Desktop (Recommended)**
+1. Download Docker Desktop from: https://www.docker.com/products/docker-desktop/
+2. Install and launch Docker Desktop
+3. Verify installation:
+   ```bash
+   docker --version
+   docker compose version
+   ```
+
+**Option 2: Homebrew**
+```bash
+brew install --cask docker
+# Then launch Docker Desktop from Applications
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Update package index
+sudo apt-get update
+
+# Install Docker
+sudo apt-get install -y docker.io docker-compose
+
+# Add your user to docker group (to run without sudo)
+sudo usermod -aG docker $USER
+
+# Start Docker service
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Log out and log back in for group changes to take effect
+# Then verify installation:
+docker --version
+docker compose version
+```
+
+### Linux (Other distributions)
+
+Use the official Docker installation script:
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Add your user to docker group
+sudo usermod -aG docker $USER
+
+# Start Docker service
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+### Windows
+
+1. Download Docker Desktop from: https://www.docker.com/products/docker-desktop/
+2. Install and launch Docker Desktop
+3. Verify installation in PowerShell or Command Prompt:
+   ```bash
+   docker --version
+   docker compose version
+   ```
+
+### Verify Docker Installation
+
+After installation, verify that Docker is working:
+```bash
+docker ps
+docker compose version
+```
+
+If you see no errors, Docker is installed and running correctly.
 
 ## Setup
 
@@ -68,7 +147,7 @@ FRONTEND_URL=http://localhost:4200
 # Backend URL (for frontend)
 REACT_APP_BACKEND_URL=http://localhost:3000/api
 
-# MongoDB Configuration
+# MongoDB Configuration (automatically started via Docker Compose)
 MONGODB_URI=mongodb://localhost:27017/casebase-demo
 ```
 
@@ -103,8 +182,11 @@ MONGODB_URI=mongodb://localhost:27017/casebase-demo
 
 #### MongoDB Configuration
 - `MONGODB_URI` (optional) - MongoDB connection string for chat history storage (default: `mongodb://localhost:27017/casebase-demo`)
-  - Make sure MongoDB is running before starting the backend
-  - For local development, install MongoDB or use MongoDB Atlas (cloud)
+  - **MongoDB is automatically started via Docker Compose when you run the backend**
+  - The Docker container will be created and started automatically
+  - Data is persisted in a Docker volume (`mongodb_data`)
+  - To stop MongoDB: `docker-compose down`
+  - To stop and remove data: `docker-compose down -v`
 
 **⚠️ Important**: Never commit the `.env` file. It's already included in `.gitignore`.
 
@@ -127,6 +209,8 @@ This will start:
 ```bash
 nx serve backend
 ```
+
+**Note**: MongoDB will be automatically started via Docker Compose before the backend starts.
 
 Backend will be available at: `http://localhost:3000/api`
 

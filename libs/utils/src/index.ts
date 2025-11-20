@@ -1,2 +1,2 @@
 export * from './lib/utils';
-export * from './lib/cookie';
+export * from './lib/lastChatId';

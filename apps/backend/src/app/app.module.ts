@@ -18,9 +18,19 @@ import { DocumentsModule } from '../documents/documents.module';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/casebase-demo';
+        return {
+          uri,
+          retryWrites: true,
+          retryReads: true,
+          serverSelectionTimeoutMS: 30000,
+          socketTimeoutMS: 45000,
+          connectTimeoutMS: 30000,
+          maxPoolSize: 10,
+          minPoolSize: 1,
+        };
+      },
       inject: [ConfigService],
     }),
     OpenAIModule,

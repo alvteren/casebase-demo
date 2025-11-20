@@ -116,13 +116,15 @@ export class ChatHistoryService {
   }
 
   /**
-   * Get messages for OpenAI API format
+   * Get messages for OpenAI API format (only user and assistant messages, no system)
    */
-  getMessagesForOpenAI(history: ChatHistoryDocument): Array<{ role: 'user' | 'assistant' | 'system'; content: string }> {
-    return history.messages.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+  getMessagesForOpenAI(history: ChatHistoryDocument): Array<{ role: 'user' | 'assistant'; content: string }> {
+    return history.messages
+      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+      .map((msg) => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }));
   }
 }
 

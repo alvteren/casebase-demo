@@ -8,3 +8,4 @@ export * from './lib/scroll-area';
 export * from './lib/empty-chat';
 export * from './lib/documents-dialog';
 export * from './lib/markdown';
+export * from './lib/chat-sidebar';

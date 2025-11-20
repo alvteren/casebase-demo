@@ -42,14 +42,21 @@
       "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
       "executor": "nx:noop"
     },
+    "start-mongodb": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sh -c 'if command -v docker >/dev/null 2>&1; then (open -a Docker 2>/dev/null || true) && timeout=30; while [ $timeout -gt 0 ] && ! docker info >/dev/null 2>&1; do sleep 1; timeout=$((timeout-1)); done; if docker info >/dev/null 2>&1; then docker compose up -d mongodb && sleep 3; else echo \"ERROR: Docker daemon is not running. Please start Docker Desktop manually.\" && exit 1; fi; elif command -v docker-compose >/dev/null 2>&1; then docker-compose up -d mongodb && sleep 3; else echo \"ERROR: Docker not found. Please install Docker or start MongoDB manually.\" && exit 1; fi'",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "start-mongodb"],
       "options": {
         "buildTarget": "backend:build",
-        "runBuildTargetDependencies": false
+        "runBuildTargetDependencies": true
       },
       "configurations": {
         "development": {
