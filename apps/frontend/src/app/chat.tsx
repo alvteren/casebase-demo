@@ -127,7 +127,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     };
 
     loadChatHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propChatId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
