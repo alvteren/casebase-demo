@@ -109,11 +109,12 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
                   <Card
                     key={chat.chatId}
                     className={cn(
-                      'p-3 cursor-pointer transition-all group relative',
+                      'p-3 cursor-pointer transition-all group relative border',
                       isActive
-                        ? 'bg-primary/10 border-primary border-l-4 shadow-sm'
-                        : 'hover:bg-accent border-l-4 border-transparent'
+                        ? 'border-primary'
+                        : 'hover:bg-accent border-transparent'
                     )}
+                    style={isActive ? { backgroundColor: 'hsl(var(--primary) / 0.15)' } : undefined}
                     onClick={() => handleChatClick(chat.chatId)}
                   >
                     <div className="flex items-start justify-between gap-2">
