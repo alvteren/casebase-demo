@@ -36,7 +36,6 @@ export function Message({
     <div
       className={cn('flex items-end gap-3', isUser ? 'justify-end' : 'justify-start')}
     >
-      {/* Assistant icon on left */}
       {!isUser && (
         <div className="shrink-0">
           <Bot className="w-6 h-6 text-muted-foreground" />
@@ -47,24 +46,14 @@ export function Message({
         className={cn(
           'max-w-3xl',
           isUser
-            ? 'bg-primary text-primary-foreground border-primary'
+            ? 'bg-blue-400 border-blue-400 text-white'
             : 'bg-card text-card-foreground'
         )}
       >
         <CardContent className="px-4 py-3">
           <div className="flex-1">
-              <Markdown>{message.content}</Markdown>
-              {message.tokensUsed && (
-                <div
-                  className={cn(
-                    'text-xs mt-2',
-                    isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                  )}
-                >
-                  Tokens: {message.tokensUsed.total} (prompt: {message.tokensUsed.prompt},
-                  completion: {message.tokensUsed.completion})
-                </div>
-              )}
+              <Markdown className={isUser ? 'text-white' : 'text-card-foreground'}>{message.content}</Markdown>
+            
               {message.context && message.context.length > 0 && (
                 <div className="mt-2">
                   <Button
@@ -74,7 +63,7 @@ export function Message({
                     className={cn(
                       'text-xs h-auto p-0',
                       isUser
-                        ? 'text-primary-foreground/80 hover:text-primary-foreground'
+                        ? 'text-accent-foreground/80 hover:text-accent-foreground'
                         : 'text-primary hover:text-primary'
                     )}
                   >
@@ -99,7 +88,7 @@ export function Message({
                           className={cn(
                             'text-xs p-2',
                             isUser
-                              ? 'bg-primary/20 text-primary-foreground/90'
+                              ? 'bg-accent/20 text-accent-foreground/90'
                               : 'bg-muted text-muted-foreground'
                           )}
                         >
@@ -120,22 +109,14 @@ export function Message({
                   )}
                 </div>
               )}
-              <div
-                className={cn(
-                  'text-xs mt-1',
-                  isUser ? 'text-primary-foreground/60' : 'text-muted-foreground'
-                )}
-              >
-                {message.timestamp.toLocaleTimeString()}
-              </div>
+              
             </div>
         </CardContent>
       </Card>
       
-      {/* User icon on right */}
       {isUser && (
         <div className="shrink-0">
-          <User className="w-6 h-6 text-muted-foreground" />
+          <User className="w-6 h-6 text-blue-400" />
         </div>
       )}
     </div>

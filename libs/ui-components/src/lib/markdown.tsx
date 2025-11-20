@@ -2,6 +2,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import type { Components } from 'react-markdown';
+import { cn } from '@casebase-demo/utils';
 
 /**
  * Custom components for ReactMarkdown that process markdown inside code blocks
@@ -31,14 +32,15 @@ const markdownCodeComponents: Components = {
 
 interface MarkdownProps {
   children: string;
+  className?: string;
 }
 
 /**
  * Markdown component that processes markdown with support for markdown inside code blocks
  */
-export function Markdown({ children }: MarkdownProps) {
+export function Markdown({ children, className }: MarkdownProps) {
   return (
-    <div className="markdown">
+    <div className={cn('markdown', className)}>
       <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]} components={markdownCodeComponents}>
         {children}
       </ReactMarkdown>
