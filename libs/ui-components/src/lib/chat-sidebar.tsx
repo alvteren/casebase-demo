@@ -107,14 +107,23 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
                 return (
                   <Card
                     key={chat.chatId}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Chat from ${formatDate(chat.updatedAt)}`}
                     className={cn(
-                      'p-3 cursor-pointer transition-all group relative border',
+                      'p-3 cursor-pointer transition-all group relative border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                       isActive
                         ? 'border-primary'
                         : 'hover:bg-accent border-transparent'
                     )}
                     style={isActive ? { backgroundColor: 'hsl(var(--primary) / 0.15)' } : undefined}
                     onClick={() => handleChatClick(chat.chatId)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleChatClick(chat.chatId);
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
