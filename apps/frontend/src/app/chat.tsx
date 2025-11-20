@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
-import { cn } from '@casebase-demo/utils';
+import { cn, getChatId, setChatId, clearChatId } from '@casebase-demo/utils';
 import { chatService, pdfService, uploadService, ChatResponse } from '@casebase-demo/api-services';
-import { Download, Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
+import { Download, Send, Loader2, FolderOpen, Paperclip, Plus } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -23,9 +23,11 @@ interface ChatMessage {
 
 export function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatId, setChatIdState] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showContext, setShowContext] = useState<{ [key: number]: boolean }>({});
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -43,6 +45,45 @@ export function Chat() {
     scrollToBottom();
   }, [messages]);
 
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        setLoadingHistory(true);
+        const savedChatId = getChatId();
+        
+        if (savedChatId) {
+          try {
+            const historyResponse = await chatService.getChatHistory(savedChatId);
+            if (historyResponse.success && historyResponse.data) {
+              setChatIdState(savedChatId);
+              const historyMessages: ChatMessage[] = historyResponse.data.messages.map((msg) => ({
+                role: msg.role,
+                content: msg.content,
+                timestamp: new Date(msg.timestamp),
+                context: msg.context,
+                tokensUsed: msg.tokensUsed,
+              }));
+              setMessages(historyMessages);
+            } else {
+              // Invalid chatId, clear it
+              clearChatId();
+            }
+          } catch (err) {
+            // Chat not found, clear cookie
+            clearChatId();
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load chat history:', err);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -57,16 +98,24 @@ export function Chat() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input.trim();
     setInput('');
     setLoading(true);
     setError(null);
 
     try {
-      const data = await chatService.query(userMessage.content, {
+      const data = await chatService.query(currentInput, {
+        chatId: chatId || undefined,
         topK: 5,
       });
 
       if (data.success && data.data) {
+        // Update chatId if we got a new one
+        if (data.data.chatId && data.data.chatId !== chatId) {
+          setChatIdState(data.data.chatId);
+          setChatId(data.data.chatId);
+        }
+
         const assistantMessage: ChatMessage = {
           role: 'assistant',
           content: data.data.answer,
@@ -177,12 +226,37 @@ export function Chat() {
     }
   };
 
+  const handleNewChat = async () => {
+    try {
+      const response = await chatService.createChat();
+      if (response.success && response.data) {
+        setChatIdState(response.data.chatId);
+        setChatId(response.data.chatId);
+        setMessages([]);
+        setError(null);
+        setSnackbarMessage('New chat created');
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create new chat';
+      setError(errorMessage);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">RAG Chat</h1>
         <div className="flex items-center gap-3">
+          <Button
+            onClick={handleNewChat}
+            variant="outline"
+            disabled={loading || loadingHistory}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Chat
+          </Button>
           <Button
             onClick={() => setDocumentsDialogOpen(true)}
             variant="default"
@@ -216,7 +290,13 @@ export function Chat() {
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full px-6 py-4">
           <div className="space-y-4">
-          {messages.length === 0 && <EmptyChat />}
+          {loadingHistory ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : messages.length === 0 ? (
+            <EmptyChat />
+          ) : null}
 
           {messages.map((message, index) => (
             <Message

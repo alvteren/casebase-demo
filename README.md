@@ -67,6 +67,9 @@ FRONTEND_URL=http://localhost:4200
 
 # Backend URL (for frontend)
 REACT_APP_BACKEND_URL=http://localhost:3000/api
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017/casebase-demo
 ```
 
 ### Environment Variables
@@ -97,6 +100,11 @@ REACT_APP_BACKEND_URL=http://localhost:3000/api
   - Can be a comma-separated list of URLs for multiple origins
 - `REACT_APP_BACKEND_URL` (optional) - Backend API URL used by frontend (default: `http://localhost:3000/api`)
   - This variable is used by the frontend to connect to the backend API
+
+#### MongoDB Configuration
+- `MONGODB_URI` (optional) - MongoDB connection string for chat history storage (default: `mongodb://localhost:27017/casebase-demo`)
+  - Make sure MongoDB is running before starting the backend
+  - For local development, install MongoDB or use MongoDB Atlas (cloud)
 
 **⚠️ Important**: Never commit the `.env` file. It's already included in `.gitignore`.
 
@@ -231,14 +239,22 @@ Once the backend is running, the following endpoints are available (with `/api` 
 
 - `GET /api` - Health check
 - `POST /api/upload` - Upload documents (PDF, DOCX, TXT)
-- `POST /api/chat/query` - Chat with RAG pipeline
+- `POST /api/chat/query` - Chat with RAG pipeline (supports `chatId` for conversation history)
 - `POST /api/pdf/generate` - Generate PDF from chat session
+
+### Chat History Endpoints
+
+- `GET /api/chat/history` - Get all chat histories
+- `GET /api/chat/history/:chatId` - Get chat history by ID
+- `POST /api/chat/history` - Create a new chat
+- `DELETE /api/chat/history/:chatId` - Delete chat history
 
 ## Technology Stack
 
 - **Monorepo**: Nx
 - **Backend**: NestJS, TypeScript
 - **Frontend**: React, TypeScript
+- **Database**: MongoDB (for chat history)
 - **Vector Database**: Pinecone
 - **AI/ML**: OpenAI (embeddings, chat completion)
 - **Build**: Webpack

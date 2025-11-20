@@ -53,6 +53,7 @@ Otherwise, use your general knowledge to provide helpful answers.`;
     useRAG: boolean = true,
     compressPrompt: boolean = true,
     maxSummaryTokens: number = 500,
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>,
   ): Promise<ChatResponse> {
     try {
       this.logger.log(`Processing query: ${userMessage.substring(0, 50)}...`);
@@ -108,22 +109,38 @@ Otherwise, use your general knowledge to provide helpful answers.`;
       // Step 4: Compose messages
       const messages: ChatMessage[] = [];
 
+      // Add system instruction
       if (useRAGContext && context) {
-        // Use RAG with context
         messages.push({
           role: 'system',
           content: this.systemInstruction,
         });
+      } else {
+        messages.push({
+          role: 'system',
+          content: this.generalSystemInstruction,
+        });
+      }
+
+      // Add conversation history if available
+      if (conversationHistory && conversationHistory.length > 0) {
+        // Add history messages (last 10 messages to avoid token limit)
+        const recentHistory = conversationHistory.slice(-10);
+        for (const msg of recentHistory) {
+          messages.push({
+            role: msg.role,
+            content: msg.content,
+          });
+        }
+      }
+
+      // Add current user message
+      if (useRAGContext && context) {
         messages.push({
           role: 'user',
           content: this.composePrompt(userMessage, context),
         });
       } else {
-        // Use general chat
-        messages.push({
-          role: 'system',
-          content: this.generalSystemInstruction,
-        });
         messages.push({
           role: 'user',
           content: userMessage,
