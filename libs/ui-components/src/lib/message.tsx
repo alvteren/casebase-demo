@@ -2,6 +2,7 @@ import { Card, CardContent } from './card';
 import { Button } from './button';
 import { cn } from '@casebase-demo/utils';
 import { User, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { Markdown } from './markdown';
 
 interface MessageProps {
   message: {
@@ -51,7 +52,7 @@ export function Message({
               )}
             </div>
             <div className="flex-1">
-            <div className="whitespace-pre-wrap">{message.content}</div>
+              <Markdown>{message.content}</Markdown>
               {message.tokensUsed && (
                 <div
                   className={cn(

@@ -13,16 +13,6 @@ export function EmptyChat() {
           <p className="text-sm text-muted-foreground mb-4">
             Ask general questions or upload documents to ask questions about them
           </p>
-          <div className="flex flex-col gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2 justify-center">
-              <Info className="w-4 h-4" />
-              <span>Upload documents to ask questions about them using RAG</span>
-            </div>
-            <div className="flex items-center gap-2 justify-center">
-              <MessageCircle className="w-4 h-4" />
-              <span>Ask general questions without uploading documents</span>
-            </div>
-          </div>
         </div>
       </Card>
     </div>
