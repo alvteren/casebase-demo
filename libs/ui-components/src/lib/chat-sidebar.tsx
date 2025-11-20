@@ -103,34 +103,55 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
             </div>
           ) : (
             <div className="space-y-1">
-              {chats.map((chat) => (
-                <Card
-                  key={chat.chatId}
-                  className={cn(
-                    'p-3 cursor-pointer hover:bg-accent transition-colors group',
-                    currentChatId === chat.chatId && 'bg-accent border-primary'
-                  )}
-                  onClick={() => handleChatClick(chat.chatId)}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MessageSquare className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(chat.updatedAt)}
-                        </span>
-                      </div>
-                      {chat.lastMessage ? (
-                        <p className="text-sm text-foreground line-clamp-2">
-                          {truncateText(chat.lastMessage.content)}
+              {chats.map((chat) => {
+                const isActive = currentChatId === chat.chatId;
+                return (
+                  <Card
+                    key={chat.chatId}
+                    className={cn(
+                      'p-3 cursor-pointer transition-all group relative',
+                      isActive
+                        ? 'bg-primary/10 border-primary border-l-4 shadow-sm'
+                        : 'hover:bg-accent border-l-4 border-transparent'
+                    )}
+                    onClick={() => handleChatClick(chat.chatId)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MessageSquare className={cn(
+                            'w-4 h-4 shrink-0',
+                            isActive ? 'text-primary' : 'text-muted-foreground'
+                          )} />
+                          <span className={cn(
+                            'text-xs',
+                            isActive ? 'text-primary font-medium' : 'text-muted-foreground'
+                          )}>
+                            {formatDate(chat.updatedAt)}
+                          </span>
+                        </div>
+                        {chat.lastMessage ? (
+                          <p className={cn(
+                            'text-sm line-clamp-2',
+                            isActive ? 'text-foreground font-medium' : 'text-foreground'
+                          )}>
+                            {truncateText(chat.lastMessage.content)}
+                          </p>
+                        ) : (
+                          <p className={cn(
+                            'text-sm',
+                            isActive ? 'text-muted-foreground' : 'text-muted-foreground'
+                          )}>
+                            Empty chat
+                          </p>
+                        )}
+                        <p className={cn(
+                          'text-xs mt-1',
+                          isActive ? 'text-primary/70 font-medium' : 'text-muted-foreground'
+                        )}>
+                          {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
                         </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Empty chat</p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
-                      </p>
-                    </div>
+                      </div>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -146,7 +167,8 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
                     </Button>
                   </div>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

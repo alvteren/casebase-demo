@@ -30,34 +30,35 @@ export function Message({
   showContext,
   onToggleContext,
 }: MessageProps) {
+  const isUser = message.role === 'user';
+  
   return (
     <div
-      className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}
+      className={cn('flex items-end gap-3', isUser ? 'justify-end' : 'justify-start')}
     >
+      {/* Assistant icon on left */}
+      {!isUser && (
+        <div className="shrink-0">
+          <Bot className="w-6 h-6 text-muted-foreground" />
+        </div>
+      )}
+      
       <Card
         className={cn(
           'max-w-3xl',
-          message.role === 'user'
+          isUser
             ? 'bg-primary text-primary-foreground border-primary'
             : 'bg-card text-card-foreground'
         )}
       >
         <CardContent className="px-4 py-3">
-          <div className="flex items-start gap-3">
-            <div className="shrink-0">
-              {message.role === 'user' ? (
-                <User className="w-6 h-6" />
-              ) : (
-                <Bot className="w-6 h-6" />
-              )}
-            </div>
-            <div className="flex-1">
+          <div className="flex-1">
               <Markdown>{message.content}</Markdown>
               {message.tokensUsed && (
                 <div
                   className={cn(
                     'text-xs mt-2',
-                    message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
                   )}
                 >
                   Tokens: {message.tokensUsed.total} (prompt: {message.tokensUsed.prompt},
@@ -72,7 +73,7 @@ export function Message({
                     size="sm"
                     className={cn(
                       'text-xs h-auto p-0',
-                      message.role === 'user'
+                      isUser
                         ? 'text-primary-foreground/80 hover:text-primary-foreground'
                         : 'text-primary hover:text-primary'
                     )}
@@ -97,7 +98,7 @@ export function Message({
                           key={ctxIndex}
                           className={cn(
                             'text-xs p-2',
-                            message.role === 'user'
+                            isUser
                               ? 'bg-primary/20 text-primary-foreground/90'
                               : 'bg-muted text-muted-foreground'
                           )}
@@ -122,15 +123,21 @@ export function Message({
               <div
                 className={cn(
                   'text-xs mt-1',
-                  message.role === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground'
+                  isUser ? 'text-primary-foreground/60' : 'text-muted-foreground'
                 )}
               >
                 {message.timestamp.toLocaleTimeString()}
               </div>
             </div>
-          </div>
         </CardContent>
       </Card>
+      
+      {/* User icon on right */}
+      {isUser && (
+        <div className="shrink-0">
+          <User className="w-6 h-6 text-muted-foreground" />
+        </div>
+      )}
     </div>
   );
 }
