@@ -149,5 +149,72 @@ export class OpenAIService implements OnModuleInit {
       );
     }
   }
+
+  /**
+   * Create streaming chat completion
+   */
+  async *createStreamingChatCompletion(
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+    options?: {
+      model?: string;
+      temperature?: number;
+      max_tokens?: number;
+    },
+  ): AsyncGenerator<string, void, unknown> {
+    try {
+      const stream = await this.client.chat.completions.create({
+        model: options?.model || 'gpt-4o-mini',
+        messages,
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.max_tokens ?? 1000,
+        stream: true,
+      });
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          yield content;
+        }
+      }
+    } catch (error: any) {
+      // Handle OpenAI API errors
+      if (error?.response) {
+        const statusCode = error.response?.status;
+        const errorMessage =
+          error.response?.data?.error?.message || error.message;
+
+        if (statusCode === 429) {
+          this.logger.error('OpenAI rate limit exceeded', error);
+          throw new Error(
+            'OpenAI API rate limit exceeded. Please try again later or check your plan limits.',
+          );
+        } else if (statusCode === 401) {
+          this.logger.error('OpenAI authentication failed', error);
+          throw new Error(
+            'OpenAI API authentication failed. Please check your API key in .env file.',
+          );
+        } else if (statusCode === 402 || errorMessage?.includes('quota')) {
+          this.logger.error('OpenAI quota exceeded', error);
+          throw new Error(
+            'OpenAI API quota exceeded. Please check your plan and billing details at https://platform.openai.com/account/billing',
+          );
+        } else if (statusCode === 500 || statusCode === 503) {
+          this.logger.error('OpenAI service unavailable', error);
+          throw new Error(
+            'OpenAI API service is temporarily unavailable. Please try again later.',
+          );
+        } else {
+          this.logger.error(`OpenAI API error (${statusCode}):`, error);
+          throw new Error(`OpenAI API error: ${errorMessage}`);
+        }
+      }
+
+      // Handle other errors
+      this.logger.error('Failed to create streaming chat completion', error);
+      throw new Error(
+        `Streaming chat completion failed: ${error?.message || 'Unknown error'}`,
+      );
+    }
+  }
 }
 

@@ -9,7 +9,9 @@ import {
   Logger,
   InternalServerErrorException,
   NotFoundException,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ChatService, ChatResponse } from './chat.service';
 import { ChatHistoryService } from './chat-history.service';
 
@@ -248,6 +250,131 @@ export class ChatController {
         throw error;
       }
       throw new InternalServerErrorException('Failed to delete chat history');
+    }
+  }
+
+  /**
+   * Stream chat query with Server-Sent Events
+   */
+  @Post('query/stream')
+  async queryStream(
+    @Body() body: ChatQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      // Validate input
+      if (!body.message || typeof body.message !== 'string') {
+        throw new BadRequestException('Message is required and must be a string');
+      }
+
+      const message = body.message.trim();
+      if (message.length === 0) {
+        throw new BadRequestException('Message cannot be empty');
+      }
+
+      const topK = body.topK !== undefined ? body.topK : 5;
+      if (topK < 1 || topK > 20) {
+        throw new BadRequestException('topK must be between 1 and 20');
+      }
+
+      const useRAG = body.useRAG !== undefined ? body.useRAG : true;
+      const compressPrompt = body.compressPrompt !== undefined ? body.compressPrompt : true;
+      const maxSummaryTokens = body.maxSummaryTokens !== undefined ? body.maxSummaryTokens : 500;
+
+      if (maxSummaryTokens < 100 || maxSummaryTokens > 2000) {
+        throw new BadRequestException('maxSummaryTokens must be between 100 and 2000');
+      }
+
+      // Get or create chat history
+      let chatId = body.chatId;
+      let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+
+      if (chatId) {
+        try {
+          const history = await this.chatHistoryService.getChatHistory(chatId);
+          conversationHistory = this.chatHistoryService.getMessagesForOpenAI(history);
+        } catch (error) {
+          if (error instanceof NotFoundException) {
+            await this.chatHistoryService.createChatHistory(chatId);
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        const newHistory = await this.chatHistoryService.createChatHistory();
+        chatId = newHistory.chatId;
+      }
+
+      // Set up SSE headers
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      // Send initial chatId
+      res.write(`data: ${JSON.stringify({ type: 'chatId', data: chatId })}\n\n`);
+
+      let fullAnswer = '';
+      let context: Array<{ text: string; score: number; source?: string }> | undefined;
+
+      // Stream the response
+      try {
+        for await (const chunk of this.chatService.queryStream(
+          message,
+          topK,
+          useRAG,
+          compressPrompt,
+          maxSummaryTokens,
+          conversationHistory,
+        )) {
+          if (chunk.type === 'chunk') {
+            fullAnswer += chunk.data;
+            res.write(`data: ${JSON.stringify({ type: 'chunk', data: chunk.data })}\n\n`);
+          } else if (chunk.type === 'context') {
+            context = chunk.data;
+            res.write(`data: ${JSON.stringify({ type: 'context', data: chunk.data })}\n\n`);
+          } else if (chunk.type === 'done') {
+            fullAnswer = chunk.data.answer;
+            context = chunk.data.context;
+
+            // Save messages to history
+            await this.chatHistoryService.addMessage(chatId, {
+              role: 'user',
+              content: message,
+              timestamp: new Date(),
+            });
+
+            await this.chatHistoryService.addMessage(chatId, {
+              role: 'assistant',
+              content: fullAnswer,
+              timestamp: new Date(),
+              context,
+            });
+
+            res.write(`data: ${JSON.stringify({ type: 'done', data: { chatId, answer: fullAnswer, context } })}\n\n`);
+            res.end();
+            return;
+          }
+        }
+      } catch (error) {
+        this.logger.error('Error in streaming chat query', error);
+        res.write(`data: ${JSON.stringify({ type: 'error', data: error?.message || 'Streaming failed' })}\n\n`);
+        res.end();
+      }
+    } catch (error) {
+      this.logger.error('Error processing streaming chat query', error);
+
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        res.status(error.getStatus()).json({
+          success: false,
+          error: error.message,
+        });
+        return;
+      }
+
+      res.status(500).json({
+        success: false,
+        error: `Failed to process streaming chat query: ${error?.message || 'Unknown error'}`,
+      });
     }
   }
 }

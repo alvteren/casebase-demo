@@ -157,42 +157,82 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     setError(null);
 
     try {
-      const data = await chatService.query(currentInput, {
-        chatId: chatId || undefined,
-        topK: 5,
-      });
+      // Create assistant message placeholder for streaming
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+      };
+      
+      // Add empty assistant message to show streaming
+      setMessages([...updatedMessagesWithUser, assistantMessage]);
 
-      if (data.success && data.data) {
-        // Update chatId if we got a new one
-        if (data.data.chatId && data.data.chatId !== chatId) {
-          setChatIdState(data.data.chatId);
-          setLastChatId(data.data.chatId);
-          refreshChatList?.(); // Refresh sidebar when new chat is created
-          navigate(`/chat/${data.data.chatId}`, { replace: true });
-        } else if (data.data.chatId) {
-          // Refresh sidebar when message is added to existing chat
-          refreshChatList?.();
-        }
+      let streamedContent = '';
+      let streamedContext: Array<{ text: string; score: number; source?: string }> | undefined;
 
-        const assistantMessage: ChatMessage = {
-          role: 'assistant',
-          content: data.data.answer,
-          timestamp: new Date(),
-          context: data.data.context,
-          tokensUsed: data.data.tokensUsed,
-        };
-        // Use updatedMessagesWithUser (which includes the user message) and add assistant message
-        const updatedMessages = [...updatedMessagesWithUser, assistantMessage];
-        setMessages(updatedMessages);
-        
-        // Update cache with new messages
-        const currentChatIdForCache = data.data.chatId || chatId;
-        if (currentChatIdForCache) {
-          messagesCacheRef.current.set(currentChatIdForCache, updatedMessages);
-        }
-      } else {
-        throw new Error(data.error || 'Failed to get response');
-      }
+      await chatService.queryStream(
+        currentInput,
+        {
+          chatId: chatId || undefined,
+          topK: 5,
+        },
+        (chunk: string) => {
+          // Update streaming content
+          streamedContent += chunk;
+          setMessages((prev) => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            if (updated[lastIndex]?.role === 'assistant') {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: streamedContent,
+              };
+            }
+            return updated;
+          });
+        },
+        (context) => {
+          streamedContext = context;
+        },
+        (data) => {
+          streamedContent = data.answer;
+          streamedContext = data.context;
+
+          // Update chatId if we got a new one
+          if (data.chatId && data.chatId !== chatId) {
+            setChatIdState(data.chatId);
+            setLastChatId(data.chatId);
+            refreshChatList?.(); // Refresh sidebar when new chat is created
+            navigate(`/chat/${data.chatId}`, { replace: true });
+          } else if (data.chatId) {
+            // Refresh sidebar when message is added to existing chat
+            refreshChatList?.();
+          }
+
+          // Update final message with context
+          setMessages((prev) => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            if (updated[lastIndex]?.role === 'assistant') {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                content: streamedContent,
+                context: streamedContext,
+              };
+            }
+            return updated;
+          });
+
+          // Update cache with final messages
+          const currentChatIdForCache = data.chatId || chatId;
+          if (currentChatIdForCache) {
+            setMessages((prev) => {
+              messagesCacheRef.current.set(currentChatIdForCache, prev);
+              return prev;
+            });
+          }
+        },
+      );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
       
@@ -312,7 +352,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           <Button
             onClick={() => setDocumentsDialogOpen(true)}
             variant="default"
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-blue-400 hover:bg-blue-500"
           >
             <FolderOpen className="w-4 h-4" />
             Documents Library

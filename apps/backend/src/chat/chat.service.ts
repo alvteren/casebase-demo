@@ -45,6 +45,150 @@ Otherwise, use your general knowledge to provide helpful answers.`;
   private readonly generalSystemInstruction: string;
 
   /**
+   * Process a user query through the RAG pipeline or general chat with streaming
+   */
+  async *queryStream(
+    userMessage: string,
+    topK: number = 5,
+    useRAG: boolean = true,
+    compressPrompt: boolean = true,
+    maxSummaryTokens: number = 500,
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>,
+  ): AsyncGenerator<{ type: 'chunk' | 'context' | 'done'; data: any }, void, unknown> {
+    try {
+      this.logger.log(`Processing streaming query: ${userMessage.substring(0, 50)}...`);
+
+      let searchResults: Array<{ id: string; score: number; metadata: any }> = [];
+      let context = '';
+      let useRAGContext = false;
+
+      if (useRAG) {
+        try {
+          // Step 1: Embed user query
+          const queryEmbedding =
+            await this.vectorStoreService.generateEmbedding(userMessage);
+
+          // Step 2: Fetch relevant context from Pinecone
+          searchResults = await this.vectorStoreService.similaritySearch(
+            queryEmbedding,
+            topK,
+          );
+
+          // Step 3: Check if we have relevant context (score threshold)
+          const relevanceThreshold = 0.5;
+          const relevantResults = searchResults.filter(
+            (r) => r.score >= relevanceThreshold,
+          );
+
+          if (relevantResults.length > 0) {
+            useRAGContext = true;
+            const rawContext = this.buildContextFromResults(relevantResults);
+            context = compressPrompt
+              ? await this.compressContext(rawContext, userMessage, maxSummaryTokens)
+              : rawContext;
+          } else if (searchResults.length > 0) {
+            useRAGContext = true;
+            const rawContext = this.buildContextFromResults(searchResults);
+            context = compressPrompt
+              ? await this.compressContext(rawContext, userMessage, maxSummaryTokens)
+              : rawContext;
+          }
+
+          // Yield context information
+          if (useRAGContext && searchResults.length > 0) {
+            yield {
+              type: 'context',
+              data: searchResults.map((result) => ({
+                text: result.metadata?.text || '',
+                score: result.score,
+                source: result.metadata?.filename || undefined,
+              })),
+            };
+          }
+        } catch (error) {
+          this.logger.warn(
+            'Failed to retrieve context from vector store, falling back to general chat',
+            error,
+          );
+        }
+      }
+
+      // Step 4: Compose messages
+      const messages: ChatMessage[] = [];
+
+      // Add system instruction
+      if (useRAGContext && context) {
+        messages.push({
+          role: 'system',
+          content: this.systemInstruction,
+        });
+      } else {
+        messages.push({
+          role: 'system',
+          content: this.generalSystemInstruction,
+        });
+      }
+
+      // Add conversation history if available
+      if (conversationHistory && conversationHistory.length > 0) {
+        const recentHistory = conversationHistory.slice(-10);
+        for (const msg of recentHistory) {
+          messages.push({
+            role: msg.role,
+            content: msg.content,
+          });
+        }
+      }
+
+      // Add current user message
+      if (useRAGContext && context) {
+        messages.push({
+          role: 'user',
+          content: this.composePrompt(userMessage, context),
+        });
+      } else {
+        messages.push({
+          role: 'user',
+          content: userMessage,
+        });
+      }
+
+      // Step 5: Stream from OpenAI Chat Completion
+      let fullAnswer = '';
+      for await (const chunk of this.openaiService.createStreamingChatCompletion(
+        messages,
+        {
+          model: 'gpt-4o-mini',
+          temperature: 0.7,
+          max_tokens: 1000,
+        },
+      )) {
+        fullAnswer += chunk;
+        yield { type: 'chunk', data: chunk };
+      }
+
+      // Yield done signal with full answer
+      yield {
+        type: 'done',
+        data: {
+          answer: fullAnswer,
+          context:
+            useRAGContext && searchResults.length > 0
+              ? searchResults.map((result) => ({
+                  text: result.metadata?.text || '',
+                  score: result.score,
+                  source: result.metadata?.filename || undefined,
+                }))
+              : undefined,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error in streaming chat pipeline', error);
+      throw error;
+    }
+  }
+
+  /**
    * Process a user query through the RAG pipeline or general chat
    */
   async query(
