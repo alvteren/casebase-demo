@@ -1,25 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { VectorStoreService } from '../vector-store/vector-store.service';
 import { OpenAIService } from '../openai/openai.service';
+import { OpenAIChatMessage, ChatResponse, ContextItem, TokensUsed } from '@casebase-demo/shared-types';
 
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-
-export interface ChatResponse {
-  answer: string;
-  context?: Array<{
-    text: string;
-    score: number;
-    source?: string;
-  }>;
-  tokensUsed?: {
-    prompt: number;
-    completion: number;
-    total: number;
-  };
-}
+// Re-export for backward compatibility
+export type ChatMessage = OpenAIChatMessage;
 
 @Injectable()
 export class ChatService {
@@ -53,7 +38,7 @@ Otherwise, use your general knowledge to provide helpful answers.`;
     useRAG: boolean = true,
     compressPrompt: boolean = true,
     maxSummaryTokens: number = 500,
-    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>,
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>, // Simplified for OpenAI API
   ): AsyncGenerator<{ type: 'chunk' | 'context' | 'done'; data: any }, void, unknown> {
     try {
       this.logger.log(`Processing streaming query: ${userMessage.substring(0, 50)}...`);
@@ -114,7 +99,7 @@ Otherwise, use your general knowledge to provide helpful answers.`;
       }
 
       // Step 4: Compose messages
-      const messages: ChatMessage[] = [];
+      const messages: OpenAIChatMessage[] = [];
 
       // Add system instruction
       if (useRAGContext && context) {
@@ -197,7 +182,7 @@ Otherwise, use your general knowledge to provide helpful answers.`;
     useRAG: boolean = true,
     compressPrompt: boolean = true,
     maxSummaryTokens: number = 500,
-    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>,
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>, // Simplified for OpenAI API
   ): Promise<ChatResponse> {
     try {
       this.logger.log(`Processing query: ${userMessage.substring(0, 50)}...`);
@@ -251,7 +236,7 @@ Otherwise, use your general knowledge to provide helpful answers.`;
       }
 
       // Step 4: Compose messages
-      const messages: ChatMessage[] = [];
+      const messages: OpenAIChatMessage[] = [];
 
       // Add system instruction
       if (useRAGContext && context) {

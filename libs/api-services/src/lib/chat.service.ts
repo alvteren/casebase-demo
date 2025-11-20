@@ -1,71 +1,32 @@
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  context?: Array<{
-    text: string;
-    score: number;
-    source?: string;
-  }>;
-  tokensUsed?: {
-    prompt: number;
-    completion: number;
-    total: number;
-  };
-}
+import {
+  ChatMessage,
+  ChatQueryDto,
+  ChatHistoryMessage,
+  ChatHistoryListItem,
+  ApiResponse,
+  ContextItem,
+  TokensUsed,
+} from '@casebase-demo/shared-types';
 
-export interface ChatQueryDto {
-  message: string;
+// Re-export for convenience
+export type { ChatMessage, ChatQueryDto, ChatHistoryMessage, ChatHistoryListItem };
+
+// API-specific response types
+export type ChatResponse = ApiResponse<{
+  answer: string;
   chatId?: string;
-  topK?: number;
-  useRAG?: boolean;
-  compressPrompt?: boolean;
-  maxSummaryTokens?: number;
-}
+  context?: ContextItem[];
+  tokensUsed?: TokensUsed;
+}>;
 
-export interface ChatResponse {
-  success: boolean;
-  data?: {
-    answer: string;
-    chatId?: string;
-    context?: Array<{
-      text: string;
-      score: number;
-      source?: string;
-    }>;
-    tokensUsed?: {
-      prompt: number;
-      completion: number;
-      total: number;
-    };
-  };
-  error?: string;
-}
-
-export interface ChatHistoryResponse {
-  success: boolean;
-  data?: {
-    chatId: string;
-    messages: ChatMessage[];
-    createdAt: string;
-    updatedAt: string;
-  };
-  error?: string;
-}
-
-export interface ChatHistoryListItem {
+export type ChatHistoryResponse = ApiResponse<{
   chatId: string;
-  messageCount: number;
+  messages: ChatMessage[];
   createdAt: string;
   updatedAt: string;
-  lastMessage: ChatMessage | null;
-}
+}>;
 
-export interface ChatHistoryListResponse {
-  success: boolean;
-  data?: ChatHistoryListItem[];
-  error?: string;
-}
+export type ChatHistoryListResponse = ApiResponse<ChatHistoryListItem[]>;
 
 export class ChatService {
   private readonly baseUrl = (process.env["REACT_APP_BACKEND_URL"]);

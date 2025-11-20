@@ -3,22 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ChatHistory, ChatHistoryDocument } from './schemas/chat-history.schema';
 import { randomUUID } from 'crypto';
-
-export interface ChatHistoryMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  context?: Array<{
-    text: string;
-    score: number;
-    source?: string;
-  }>;
-  tokensUsed?: {
-    prompt: number;
-    completion: number;
-    total: number;
-  };
-}
+import { ChatHistoryMessage } from '@casebase-demo/shared-types';
 
 @Injectable()
 export class ChatHistoryService {

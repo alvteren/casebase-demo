@@ -3,23 +3,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 import { chatService, pdfService, uploadService } from '@casebase-demo/api-services';
+import { ChatMessage, ChatHistoryMessage } from '@casebase-demo/shared-types';
 import { Download, Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  context?: Array<{
-    text: string;
-    score: number;
-    source?: string;
-  }>;
-  tokensUsed?: {
-    prompt: number;
-    completion: number;
-    total: number;
-  };
-}
 
 interface ChatProps {
   chatId?: string;
@@ -93,10 +78,10 @@ export function Chat({ chatId: propChatId }: ChatProps) {
               setLastChatId(currentChatId);
               // Remove from failed list if it was there
               failedChatIdsRef.current.delete(currentChatId);
-              const historyMessages: ChatMessage[] = historyResponse.data.messages.map((msg) => ({
+              const historyMessages: ChatMessage[] = historyResponse.data.messages.map((msg: ChatHistoryMessage) => ({
                 role: msg.role,
                 content: msg.content,
-                timestamp: new Date(msg.timestamp),
+                timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp),
                 context: msg.context,
                 tokensUsed: msg.tokensUsed,
               }));

@@ -14,15 +14,7 @@ import {
 import { Response } from 'express';
 import { ChatService, ChatResponse } from './chat.service';
 import { ChatHistoryService } from './chat-history.service';
-
-export interface ChatQueryDto {
-  message: string;
-  chatId?: string;
-  topK?: number;
-  useRAG?: boolean;
-  compressPrompt?: boolean; // Enable/disable prompt compression
-  maxSummaryTokens?: number; // Max tokens for compressed context
-}
+import { ChatQueryDto } from '@casebase-demo/shared-types';
 
 @Controller('chat')
 export class ChatController {

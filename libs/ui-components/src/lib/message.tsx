@@ -3,23 +3,10 @@ import { Button } from './button';
 import { cn } from '@casebase-demo/utils';
 import { User, Bot, ChevronDown, ChevronUp } from 'lucide-react';
 import { Markdown } from './markdown';
+import { ChatMessage, ContextItem } from '@casebase-demo/shared-types';
 
 interface MessageProps {
-  message: {
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp: Date;
-    context?: Array<{
-      text: string;
-      score: number;
-      source?: string;
-    }>;
-    tokensUsed?: {
-      prompt: number;
-      completion: number;
-      total: number;
-    };
-  };
+  message: ChatMessage & { timestamp: Date };
   index: number;
   showContext: boolean;
   onToggleContext: () => void;
@@ -82,7 +69,7 @@ export function Message({
                   </Button>
                   {showContext && (
                     <div className="mt-2 space-y-2">
-                      {message.context.map((item, ctxIndex) => (
+                      {message.context.map((item: ContextItem, ctxIndex: number) => (
                         <Card
                           key={ctxIndex}
                           className={cn(

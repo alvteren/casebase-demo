@@ -1,12 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { Readable } from 'stream';
-
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp?: Date;
-}
+import { ChatMessage } from '@casebase-demo/shared-types';
 
 export interface PdfGenerationOptions {
   title?: string;
