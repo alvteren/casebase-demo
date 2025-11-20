@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { ChatSidebar } from '@casebase-demo/ui-components';
-import { chatService } from '@casebase-demo/api-services';
-import { setLastChatId } from '@casebase-demo/utils';
+import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 
 export function ChatLayout() {
   const navigate = useNavigate();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleNewChat = () => {
+    // Clear last chat ID to prevent redirect to last chat
     // Navigate to new chat without creating one
     // Chat will be created automatically when first message is sent
+    clearLastChatId();
     navigate('/chat');
   };
 
