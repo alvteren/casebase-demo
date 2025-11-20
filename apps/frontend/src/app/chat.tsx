@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
-import { cn, getChatId, setChatId, clearChatId } from '@casebase-demo/utils';
+import { cn, setLastChatId } from '@casebase-demo/utils';
 import { chatService, pdfService, uploadService, ChatResponse } from '@casebase-demo/api-services';
-import { Download, Send, Loader2, FolderOpen, Paperclip, Plus } from 'lucide-react';
+import { Download, Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -20,10 +21,19 @@ interface ChatMessage {
   };
 }
 
+interface ChatProps {
+  chatId?: string;
+}
 
-export function Chat() {
+interface ChatLayoutContext {
+  refreshChatList?: () => void;
+}
+
+export function Chat({ chatId: propChatId }: ChatProps) {
+  const navigate = useNavigate();
+  const { refreshChatList } = useOutletContext<ChatLayoutContext>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [chatId, setChatIdState] = useState<string | null>(null);
+  const [chatId, setChatIdState] = useState<string | null>(propChatId || null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,18 +55,19 @@ export function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history on mount
+  // Load chat history when chatId changes
   useEffect(() => {
     const loadChatHistory = async () => {
       try {
         setLoadingHistory(true);
-        const savedChatId = getChatId();
+        const currentChatId = propChatId;
         
-        if (savedChatId) {
+        if (currentChatId) {
           try {
-            const historyResponse = await chatService.getChatHistory(savedChatId);
+            const historyResponse = await chatService.getChatHistory(currentChatId);
             if (historyResponse.success && historyResponse.data) {
-              setChatIdState(savedChatId);
+              setChatIdState(currentChatId);
+              setLastChatId(currentChatId);
               const historyMessages: ChatMessage[] = historyResponse.data.messages.map((msg) => ({
                 role: msg.role,
                 content: msg.content,
@@ -65,14 +76,19 @@ export function Chat() {
                 tokensUsed: msg.tokensUsed,
               }));
               setMessages(historyMessages);
-            } else {
-              // Invalid chatId, clear it
-              clearChatId();
             }
           } catch (err) {
-            // Chat not found, clear cookie
-            clearChatId();
+            // Chat not found, redirect to new chat (without creating one)
+            // Chat will be created automatically when first message is sent
+            setChatIdState(null);
+            setMessages([]);
+            navigate('/chat', { replace: true });
           }
+        } else {
+          // No chatId - don't create a chat yet
+          // Chat will be created automatically when first message is sent
+          setChatIdState(null);
+          setMessages([]);
         }
       } catch (err) {
         console.error('Failed to load chat history:', err);
@@ -82,7 +98,8 @@ export function Chat() {
     };
 
     loadChatHistory();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propChatId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +130,12 @@ export function Chat() {
         // Update chatId if we got a new one
         if (data.data.chatId && data.data.chatId !== chatId) {
           setChatIdState(data.data.chatId);
-          setChatId(data.data.chatId);
+          setLastChatId(data.data.chatId);
+          refreshChatList?.(); // Refresh sidebar when new chat is created
+          navigate(`/chat/${data.data.chatId}`, { replace: true });
+        } else if (data.data.chatId) {
+          // Refresh sidebar when message is added to existing chat
+          refreshChatList?.();
         }
 
         const assistantMessage: ChatMessage = {
@@ -226,37 +248,12 @@ export function Chat() {
     }
   };
 
-  const handleNewChat = async () => {
-    try {
-      const response = await chatService.createChat();
-      if (response.success && response.data) {
-        setChatIdState(response.data.chatId);
-        setChatId(response.data.chatId);
-        setMessages([]);
-        setError(null);
-        setSnackbarMessage('New chat created');
-        setSnackbarOpen(true);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create new chat';
-      setError(errorMessage);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">RAG Chat</h1>
         <div className="flex items-center gap-3">
-          <Button
-            onClick={handleNewChat}
-            variant="outline"
-            disabled={loading || loadingHistory}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Chat
-          </Button>
           <Button
             onClick={() => setDocumentsDialogOpen(true)}
             variant="default"
