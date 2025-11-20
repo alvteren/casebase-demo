@@ -38,14 +38,15 @@ export function Chat({ chatId: propChatId }: ChatProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showContext, setShowContext] = useState<{ [key: number]: boolean }>({});
-  const failedChatIdsRef = useRef<Set<string>>(new Set()); // Track failed chat IDs to prevent retries
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const failedChatIdsRef = useRef<Set<string>>(new Set()); // Track failed chat IDs to prevent retries
+  const messagesCacheRef = useRef<Map<string, ChatMessage[]>>(new Map()); // Cache loaded messages by chatId
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
@@ -74,6 +75,17 @@ export function Chat({ chatId: propChatId }: ChatProps) {
             return;
           }
 
+          // Check if we have cached messages for this chatId
+          const cachedMessages = messagesCacheRef.current.get(currentChatId);
+          if (cachedMessages) {
+            // Use cached messages, no need to reload
+            setChatIdState(currentChatId);
+            setLastChatId(currentChatId);
+            setMessages(cachedMessages);
+            setLoadingHistory(false);
+            return;
+          }
+
           try {
             const historyResponse = await chatService.getChatHistory(currentChatId);
             if (historyResponse.success && historyResponse.data) {
@@ -88,6 +100,8 @@ export function Chat({ chatId: propChatId }: ChatProps) {
                 context: msg.context,
                 tokensUsed: msg.tokensUsed,
               }));
+              // Cache the messages
+              messagesCacheRef.current.set(currentChatId, historyMessages);
               setMessages(historyMessages);
             }
           } catch (error) {
@@ -129,7 +143,15 @@ export function Chat({ chatId: propChatId }: ChatProps) {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessagesWithUser = [...messages, userMessage];
+    setMessages(updatedMessagesWithUser);
+    
+    // Update cache with user message
+    const currentChatIdForUser = chatId;
+    if (currentChatIdForUser) {
+      messagesCacheRef.current.set(currentChatIdForUser, updatedMessagesWithUser);
+    }
+    
     const currentInput = input.trim();
     setInput('');
     setLoading(true);
@@ -160,7 +182,15 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           context: data.data.context,
           tokensUsed: data.data.tokensUsed,
         };
-        setMessages((prev) => [...prev, assistantMessage]);
+        // Use updatedMessagesWithUser (which includes the user message) and add assistant message
+        const updatedMessages = [...updatedMessagesWithUser, assistantMessage];
+        setMessages(updatedMessages);
+        
+        // Update cache with new messages
+        const currentChatIdForCache = data.data.chatId || chatId;
+        if (currentChatIdForCache) {
+          messagesCacheRef.current.set(currentChatIdForCache, updatedMessages);
+        }
       } else {
         throw new Error(data.error || 'Failed to get response');
       }
@@ -179,12 +209,23 @@ export function Chat({ chatId: propChatId }: ChatProps) {
       
       setError(userFriendlyMessage);
       // Add error message to chat
-      const errorChatMessage: ChatMessage = {
-        role: 'assistant',
-        content: `Sorry, I encountered an error: ${userFriendlyMessage}`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorChatMessage]);
+      // Get the latest messages (which should include the user message we just added)
+      setMessages((prev) => {
+        const errorChatMessage: ChatMessage = {
+          role: 'assistant',
+          content: `Sorry, I encountered an error: ${userFriendlyMessage}`,
+          timestamp: new Date(),
+        };
+        const updatedMessagesWithError = [...prev, errorChatMessage];
+        
+        // Update cache with error message
+        const currentChatIdForError = chatId;
+        if (currentChatIdForError) {
+          messagesCacheRef.current.set(currentChatIdForError, updatedMessagesWithError);
+        }
+        
+        return updatedMessagesWithError;
+      });
     } finally {
       setLoading(false);
     }
