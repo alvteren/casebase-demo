@@ -11,11 +11,7 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "libs/ui-components/src",
-    "utils": "libs/ui-components/src/lib/utils",
-    "ui": "libs/ui-components/src/lib",
-    "lib": "libs/ui-components/src/lib",
-    "hooks": "apps/frontend/src/hooks"
+    "components": "libs/ui-components/src/lib",
   },
   "registries": {
     "@acme": "https://acme.com/r/{name}.json"
