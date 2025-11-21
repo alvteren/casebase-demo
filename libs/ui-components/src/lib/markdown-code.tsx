@@ -1,5 +1,5 @@
 import ReactMarkdown from 'react-markdown';
-wimport type { Components } from 'react-markdown';
+import type { Components } from 'react-markdown';
 
 /**
  * Custom components for ReactMarkdown that process markdown inside code blocks

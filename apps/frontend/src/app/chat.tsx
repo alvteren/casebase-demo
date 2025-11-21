@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
-import { chatService, pdfService, uploadService } from '@casebase-demo/api-services';
+import { chatService, uploadService } from '@casebase-demo/api-services';
 import { ChatMessage, ChatHistoryMessage } from '@casebase-demo/shared-types';
-import { Download, Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
+import { Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
 
 interface ChatProps {
   chatId?: string;
@@ -24,7 +24,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
   const [error, setError] = useState<string | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showContext, setShowContext] = useState<{ [key: number]: boolean }>({});
-  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
@@ -255,39 +254,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     }
   };
 
-  const handleGeneratePdf = async () => {
-    if (messages.length === 0) {
-      setError('No messages to export');
-      return;
-    }
-
-    setGeneratingPdf(true);
-    setError(null);
-
-    try {
-      const pdfMessages = messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp,
-      }));
-
-      const blob = await pdfService.generateChatPdf({
-        messages: pdfMessages,
-        title: 'Chat Conversation',
-        includeMetadata: true,
-        includeContext: false,
-      });
-
-      pdfService.downloadPdf(blob, `chat-${new Date().toISOString().split('T')[0]}.pdf`);
-
-      setSnackbarMessage('Chat exported to PDF successfully');
-      setSnackbarOpen(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate PDF');
-    } finally {
-      setGeneratingPdf(false);
-    }
-  };
 
   const toggleContext = (index: number) => {
     setShowContext((prev) => ({
@@ -341,24 +307,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           >
             <FolderOpen className="w-4 h-4" />
             Documents Library
-          </Button>
-          <Button
-            onClick={handleGeneratePdf}
-            disabled={messages.length === 0 || generatingPdf}
-            variant="default"
-            title={messages.length === 0 ? 'No messages to export' : 'Download chat as PDF'}
-          >
-            {generatingPdf ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Generating...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Download PDF
-              </>
-            )}
           </Button>
         </div>
       </div>

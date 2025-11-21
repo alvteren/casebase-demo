@@ -36,30 +36,11 @@ const response = await chatService.query('What is in the document?', {
 });
 ```
 
-### PdfService
-Service for generating and downloading PDF documents.
-
-**Methods:**
-- `generateChatPdf(options: PdfGenerationOptions): Promise<Blob>` - Generate PDF from chat conversation
-- `downloadPdf(blob: Blob, filename: string): void` - Download PDF blob as a file
-
-**Usage:**
-```typescript
-import { pdfService } from '@casebase-demo/api-services';
-
-const blob = await pdfService.generateChatPdf({
-  messages: chatMessages,
-  title: 'Chat Conversation',
-});
-pdfService.downloadPdf(blob, 'chat.pdf');
-```
-
 ## Types
 
 All TypeScript interfaces and types are exported from the library:
 - `UploadResponse`, `UploadDocument`
 - `ChatResponse`, `ChatQueryDto`
-- `PdfMessage`, `PdfGenerationOptions`
 
 ## Building
 
