@@ -1,2 +1,3 @@
 export * from './lib/utils';
-export * from './lib/lastChatId';
+export * from './lib/last-chat-id';
+export * from './lib/pdf-export';

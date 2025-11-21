@@ -1,17 +1,15 @@
-import { useRef, forwardRef, useImperativeHandle } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import { Card, CardContent } from './card';
 import { Button } from './button';
-import { cn } from '@casebase-demo/utils';
+import { cn, exporElementToPdf } from '@casebase-demo/utils';
 import { User, Bot, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { Markdown } from './markdown';
 import { ChatMessage, ContextItem } from '@casebase-demo/shared-types';
 
 interface MessageProps {
   message: ChatMessage & { timestamp: Date };
-  index: number;
-  showContext: boolean;
-  onToggleContext: () => void;
-  onExport?: () => void;
+  onExportSuccess?: () => void;
+  onExportError?: (error: string) => void;
 }
 
 export interface MessageRef {
@@ -20,16 +18,37 @@ export interface MessageRef {
 
 export const Message = forwardRef<MessageRef, MessageProps>(({
   message,
-  showContext,
-  onToggleContext,
-  onExport,
+  onExportSuccess,
+  onExportError,
 }, ref) => {
   const messageRef = useRef<HTMLDivElement>(null);
+  const [showContext, setShowContext] = useState(false);
   const isUser = message.role === 'user';
   
   useImperativeHandle(ref, () => ({
     getElement: () => messageRef.current,
   }));
+
+  const handleToggleContext = () => {
+    setShowContext((prev) => !prev);
+  };
+
+  const handleExport = async () => {
+    const element = messageRef.current;
+    if (!element) {
+      onExportError?.('Message element not found');
+      return;
+    }
+
+
+    try {
+      await exporElementToPdf(element);
+      onExportSuccess?.();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to export message';
+      onExportError?.(errorMessage);
+    }
+  };
   
   return (
     <div
@@ -55,9 +74,9 @@ export const Message = forwardRef<MessageRef, MessageProps>(({
               <div ref={messageRef} className="flex-1">
                 <Markdown className={isUser ? 'text-white' : 'text-card-foreground'}>{message.content}</Markdown>
               </div>
-              {!isUser && onExport && (
+              {!isUser && (
                 <Button
-                  onClick={onExport}
+                  onClick={handleExport}
                   variant="ghost"
                   size="sm"
                   className="shrink-0 h-8 w-8 p-0"
@@ -71,7 +90,7 @@ export const Message = forwardRef<MessageRef, MessageProps>(({
               {message.context && message.context.length > 0 && (
                 <div className="mt-2">
                   <Button
-                    onClick={onToggleContext}
+                    onClick={handleToggleContext}
                     variant="ghost"
                     size="sm"
                     className={cn(

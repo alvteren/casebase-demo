@@ -20,5 +20,3 @@ export async function exporElementToPdf(element: HTMLElement): Promise<void> {
   await html2pdf().set(opt).from(element).save();
 }
 
-
-
