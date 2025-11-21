@@ -10,3 +10,4 @@ export * from './lib/documents-dialog';
 export * from './lib/markdown';
 export * from './lib/chat-sidebar';
 export * from './lib/badge';
+export * from './lib/tooltip';

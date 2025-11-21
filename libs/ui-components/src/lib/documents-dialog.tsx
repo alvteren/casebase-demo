@@ -7,6 +7,7 @@ import {
   DialogDescription,
 } from './dialog';
 import { Button } from './button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 import { ScrollArea } from './scroll-area';
 import { Card } from './card';
 import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
@@ -180,18 +181,25 @@ export function DocumentsDialog({
                           <p>Uploaded: {formatDate(doc.uploadedAt)}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(doc.documentId)}
-                        disabled={deleting === doc.documentId}
-                      >
-                        {deleting === doc.documentId ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(doc.documentId)}
+                            disabled={deleting === doc.documentId}
+                          >
+                            {deleting === doc.documentId ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete document</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </Card>
                 ))}

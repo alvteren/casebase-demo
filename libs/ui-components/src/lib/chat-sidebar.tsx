@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from './button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 import { ScrollArea } from './scroll-area';
 import { Card } from './card';
 import { Badge } from './badge';
@@ -80,13 +81,20 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
     <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Header */}
       <div className="p-4 border-b border-border flex justify-end">
-        <Button
-          onClick={onNewChat}
-          variant="outline"
-          size="icon"
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onNewChat}
+              variant="outline"
+              size="icon"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>New Chat</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Chat List */}
@@ -161,19 +169,26 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
                           </Badge>
                         </div>
                       </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleDelete(e, chat.chatId)}
-                      disabled={deleting === chat.chatId}
-                    >
-                      {deleting === chat.chatId ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      )}
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleDelete(e, chat.chatId)}
+                          disabled={deleting === chat.chatId}
+                        >
+                          {deleting === chat.chatId ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete chat</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </Card>
                 );

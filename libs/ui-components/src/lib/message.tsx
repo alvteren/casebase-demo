@@ -1,6 +1,7 @@
 import { useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import { Card, CardContent } from './card';
 import { Button } from './button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 import { cn, exportElementToPdf } from '@casebase-demo/utils';
 import { User, Bot, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { Markdown } from './markdown';
@@ -143,15 +144,21 @@ export const Message = forwardRef<MessageRef, MessageProps>(({
         )}
         {!isUser && (
           <div>
-            <Button
-              onClick={handleExport}
-              variant="ghost"
-              size="sm"
-              className="shrink-0 h-8 w-8 p-0 "
-              title="Export this message to PDF"
-            >
-              <Download className="w-4 h-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={handleExport}
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 h-8 w-8 p-0"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Export this message to PDF</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         )}
       </div>

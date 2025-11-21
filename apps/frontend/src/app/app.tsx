@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Chat } from './chat';
 import { ChatLayout } from './chat-layout';
 import { getLastChatId } from '@casebase-demo/utils';
+import { TooltipProvider } from '@casebase-demo/ui-components';
 
 function ChatRoute() {
   const { chatId } = useParams<{ chatId?: string }>();
@@ -21,15 +22,17 @@ function ChatRoute() {
 
 export function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Routes>
-        <Route path="/" element={<Navigate to="/chat" replace />} />
-        <Route path="/chat" element={<ChatLayout />}>
-          <Route index element={<ChatRoute />} />
-          <Route path=":chatId" element={<ChatRoute />} />
-        </Route>
-      </Routes>
-    </div>
+    <TooltipProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Routes>
+          <Route path="/" element={<Navigate to="/chat" replace />} />
+          <Route path="/chat" element={<ChatLayout />}>
+            <Route index element={<ChatRoute />} />
+            <Route path=":chatId" element={<ChatRoute />} />
+          </Route>
+        </Routes>
+      </div>
+    </TooltipProvider>
   );
 }
 
