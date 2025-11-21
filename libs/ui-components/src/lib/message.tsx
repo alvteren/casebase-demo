@@ -1,7 +1,8 @@
+import { useRef, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent } from './card';
 import { Button } from './button';
 import { cn } from '@casebase-demo/utils';
-import { User, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Bot, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { Markdown } from './markdown';
 import { ChatMessage, ContextItem } from '@casebase-demo/shared-types';
 
@@ -10,14 +11,25 @@ interface MessageProps {
   index: number;
   showContext: boolean;
   onToggleContext: () => void;
+  onExport?: () => void;
 }
 
-export function Message({
+export interface MessageRef {
+  getElement: () => HTMLElement | null;
+}
+
+export const Message = forwardRef<MessageRef, MessageProps>(({
   message,
   showContext,
   onToggleContext,
-}: MessageProps) {
+  onExport,
+}, ref) => {
+  const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === 'user';
+  
+  useImperativeHandle(ref, () => ({
+    getElement: () => messageRef.current,
+  }));
   
   return (
     <div
@@ -39,7 +51,22 @@ export function Message({
       >
         <CardContent className="px-4 py-3">
           <div className="flex-1">
-              <Markdown className={isUser ? 'text-white' : 'text-card-foreground'}>{message.content}</Markdown>
+            <div className="flex items-start justify-between gap-2">
+              <div ref={messageRef} className="flex-1">
+                <Markdown className={isUser ? 'text-white' : 'text-card-foreground'}>{message.content}</Markdown>
+              </div>
+              {!isUser && onExport && (
+                <Button
+                  onClick={onExport}
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 h-8 w-8 p-0"
+                  title="Export this message to PDF"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
             
               {message.context && message.context.length > 0 && (
                 <div className="mt-2">
@@ -108,5 +135,7 @@ export function Message({
       )}
     </div>
   );
-}
+});
+
+Message.displayName = 'Message';
 

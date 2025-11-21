@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog } from '@casebase-demo/ui-components';
+import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog, type MessageRef } from '@casebase-demo/ui-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
+import { exporElementToPdf } from '../utils/pdf-export';
 import { chatService, uploadService } from '@casebase-demo/api-services';
 import { ChatMessage, ChatHistoryMessage } from '@casebase-demo/shared-types';
 import { Send, Loader2, FolderOpen, Paperclip } from 'lucide-react';
@@ -29,6 +30,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Map<number, MessageRef>>(new Map());
   const failedChatIdsRef = useRef<Set<string>>(new Set()); // Track failed chat IDs to prevent retries
   const messagesCacheRef = useRef<Map<string, ChatMessage[]>>(new Map()); // Cache loaded messages by chatId
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -262,6 +264,24 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     }));
   };
 
+  const handleExportMessage = async (messageIndex: number) => {
+    const messageRef = messageRefs.current.get(messageIndex);
+    if (!messageRef) return;
+
+    const element = messageRef.getElement();
+    if (!element) return;
+
+    try {
+      setError(null);
+      await exporElementToPdf(element);
+      setSnackbarMessage('Message exported to PDF successfully');
+      setSnackbarOpen(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export message');
+    }
+  };
+
+
   const handleUploadSuccess = () => {
     setSnackbarMessage('Document uploaded and indexed successfully!');
     setSnackbarOpen(true);
@@ -303,7 +323,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           <Button
             onClick={() => setDocumentsDialogOpen(true)}
             variant="default"
-            className="bg-blue-400 hover:bg-blue-500"
+            className="bg-blue-400 hover:bg-blue-500 text-white"
           >
             <FolderOpen className="w-4 h-4" />
             Documents Library
@@ -326,10 +346,18 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           {messages.map((message, index) => (
             <Message
               key={index}
+              ref={(ref) => {
+                if (ref) {
+                  messageRefs.current.set(index, ref);
+                } else {
+                  messageRefs.current.delete(index);
+                }
+              }}
               message={message}
               index={index}
               showContext={showContext[index] || false}
               onToggleContext={() => toggleContext(index)}
+              onExport={message.role === 'assistant' ? () => handleExportMessage(index) : undefined}
             />
           ))}
 
