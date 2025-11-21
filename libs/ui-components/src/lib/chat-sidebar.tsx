@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from './button';
 import { ScrollArea } from './scroll-area';
 import { Card } from './card';
+import { Badge } from './badge';
 import { chatService, ChatHistoryListItem } from '@casebase-demo/api-services';
 import { Plus, MessageSquare, Loader2, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -154,12 +155,11 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
                             Empty chat
                           </p>
                         )}
-                        <p className={cn(
-                          'text-xs mt-1',
-                          isActive ? 'text-primary/70 font-medium' : 'text-muted-foreground'
-                        )}>
-                          {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
-                        </p>
+                        <div className="mt-1">
+                          <Badge variant={isActive ? 'default' : 'secondary'} className="text-xs">
+                            {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
+                          </Badge>
+                        </div>
                       </div>
                     <Button
                       variant="ghost"
