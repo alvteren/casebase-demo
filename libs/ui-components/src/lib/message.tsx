@@ -66,7 +66,7 @@ export const Message = forwardRef<MessageRef, MessageProps>(({
         <Card
           className={cn(
             isUser
-              ? 'bg-blue-400 border-blue-400 text-white'
+              ? 'bg-primary text-white'
               : 'bg-card text-card-foreground'
           )}
         >
@@ -138,7 +138,7 @@ export const Message = forwardRef<MessageRef, MessageProps>(({
         </Card>
         {isUser && (
           <div className="shrink-0">
-            <User className="w-6 h-6 text-blue-400" />
+            <User className="w-6 h-6 text-primary" />
           </div>
         )}
         {!isUser && (

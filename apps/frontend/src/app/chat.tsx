@@ -311,7 +311,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           <Button
             onClick={() => setDocumentsDialogOpen(true)}
             variant="default"
-            className="bg-blue-400 hover:bg-blue-500 text-white"
           >
             <FolderOpen className="w-4 h-4" />
             Documents Library
