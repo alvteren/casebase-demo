@@ -8,7 +8,7 @@ type Html2PdfOptions = Parameters<Html2PdfWorkerInstance['set']>[0];
 /**
  * Export a DOM element to PDF
  */
-export async function exporElementToPdf(element: HTMLElement): Promise<void> {
+export async function exportElementToPdf(element: HTMLElement): Promise<void> {
   const opt: Html2PdfOptions = {
     margin: 10,
     filename: `message-${new Date().toISOString().split('T')[0]}.pdf`,

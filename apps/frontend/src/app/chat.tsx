@@ -322,7 +322,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
       {/* Messages */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full px-6 py-4">
-          <div className="space-y-4">
+          <div className="flex flex-col space-y-4">
           {loadingHistory ? (
             <div className="flex justify-center items-center h-full">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -331,16 +331,16 @@ export function Chat({ chatId: propChatId }: ChatProps) {
             <EmptyChat />
           ) : null}
 
-          {messages.map((message, index) => (
-            <Message
+          { messages.map((message, index) => (
+            message.content && (<Message
               key={index}
               message={message}
               onExportSuccess={message.role === 'assistant' ? handleExportSuccess : undefined}
               onExportError={message.role === 'assistant' ? handleExportError : undefined}
-            />
+            />)
           ))}
 
-          {loading && (
+          {loading && !(messages[messages.length - 1]?.content) && (
             <div className="flex justify-start">
               <Card className="px-4 py-3">
                 <div className="flex items-center gap-2">
