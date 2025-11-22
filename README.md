@@ -1,6 +1,6 @@
 # casebase-demo
 
-Demo project for Casebase - RAG (Retrieval-Augmented Generation) application with document upload, vector storage, and chat functionality.
+Demo project for Casebase - application with document upload, vector storage, and chat functionality.
 
 ## Project Structure
 
@@ -104,7 +104,7 @@ If you see no errors, Docker is installed and running correctly.
 
 1. **Clone the repository** (if not already done):
 ```bash
-git clone <repository-url>
+git clone git@github.com:alvteren/casebase-demo.git
 cd casebase-demo
 ```
 
@@ -237,64 +237,8 @@ nx build backend
 nx build frontend
 ```
 
-### Testing
-
-Run all tests:
-
-```bash
-npm test
-```
-
-Run tests for specific project:
-
-```bash
-nx test backend
-nx test frontend
-```
-
-Run E2E tests:
-
-```bash
-nx e2e backend-e2e
-nx e2e frontend-e2e
-```
-
-### Linting
-
-Lint all projects:
-
-```bash
-npm run lint
-```
-
-Lint specific project:
-
-```bash
-nx lint backend
-nx lint frontend
-```
-
 ## Main Commands
 
-### Nx Commands
-
-All commands use the Nx CLI. You can use `npx nx` or the `nx` executable:
-
-```bash
-# General syntax
-nx <command> <project>
-
-# Examples
-nx serve backend          # Serve backend app
-nx serve frontend         # Serve frontend app
-nx build backend          # Build backend app
-nx test backend           # Run tests for backend
-nx lint backend           # Lint backend code
-nx e2e backend-e2e        # Run E2E tests
-
-# Graph visualization
-nx graph                  # Show project dependency graph
-```
 
 ### Available Scripts
 
@@ -306,14 +250,8 @@ nx graph                  # Show project dependency graph
 
 ### Useful Nx Commands
 
-```bash
-# Show project information
-nx show project backend
-
-# Run multiple projects
-nx run-many --target=serve --projects=backend,frontend
-
 # Clear Nx cache
+```bash
 nx reset
 ```
 
@@ -342,19 +280,6 @@ Once the backend is running, the following endpoints are available (with `/api` 
 - **Vector Database**: Pinecone
 - **AI/ML**: OpenAI (embeddings, chat completion)
 - **Build**: Webpack
-
-## Project Status
-
-This is a demo project. Current implementation includes:
-
-- ✅ Nx monorepo setup
-- ✅ NestJS backend with main modules
-- ✅ Environment configuration
-- ✅ Pinecone integration
-- ✅ Vector store service with embeddings
-- 🔄 Document upload (in progress)
-- 🔄 RAG pipeline (in progress)
-- 🔄 Frontend UI (in progress)
 
 ## License
 

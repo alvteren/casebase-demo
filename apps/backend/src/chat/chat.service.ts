@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { VectorStoreService } from '../vector-store/vector-store.service';
 import { OpenAIService } from '../openai/openai.service';
-import { OpenAIChatMessage, ChatResponse, ContextItem, TokensUsed } from '@casebase-demo/shared-types';
+import { OpenAIChatMessage, ChatResponse } from '@casebase-demo/shared-types';
 
 // Re-export for backward compatibility
 export type ChatMessage = OpenAIChatMessage;
