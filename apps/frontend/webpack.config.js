@@ -12,6 +12,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     alias: {
       '@casebase-demo/ui-components': join(__dirname, '../../libs/ui-components/src/index.ts'),
+      '@casebase-demo/feature-components': join(__dirname, '../../libs/feature-components/src/index.ts'),
       '@casebase-demo/api-services': join(__dirname, '../../libs/api-services/src/index.ts'),
       '@casebase-demo/utils': join(__dirname, '../../libs/utils/src/index.ts'),
     },

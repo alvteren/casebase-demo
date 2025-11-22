@@ -12,10 +12,12 @@ import {
   SidebarMenuAction,
   SidebarRail,
   useSidebar,
-} from './sidebar';
-import { Button } from './button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
-import { Badge } from './badge';
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Badge,
+} from '@casebase-demo/ui-components';
 import { chatService, ChatHistoryListItem } from '@casebase-demo/api-services';
 import { Plus, MessageSquare, Loader2, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';

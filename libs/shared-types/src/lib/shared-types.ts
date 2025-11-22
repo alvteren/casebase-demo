@@ -91,9 +91,6 @@ export interface ChatHistoryMessage {
   tokensUsed?: TokensUsed;
 }
 
-/**
- * Chat history item in list
- */
 export interface ChatHistoryListItem {
   chatId: string;
   messageCount: number;
@@ -102,19 +99,12 @@ export interface ChatHistoryListItem {
   lastMessage: ChatHistoryMessage | null;
 }
 
-/**
- * Chat history response
- */
 export interface ChatHistoryResponse {
   chatId: string;
   messages: ChatHistoryMessage[];
   createdAt: string;
   updatedAt: string;
 }
-
-/**
- * Document metadata
- */
 export interface DocumentMetadata {
   documentId: string;
   filename: string;
@@ -125,9 +115,6 @@ export interface DocumentMetadata {
   uploadedAt?: Date;
 }
 
-/**
- * Uploaded document
- */
 export interface UploadedDocument {
   documentId: string;
   filename: string;
@@ -138,9 +125,6 @@ export interface UploadedDocument {
   text?: string;
 }
 
-/**
- * Document summary
- */
 export interface DocumentSummary {
   documentId: string;
   filename: string;

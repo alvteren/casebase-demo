@@ -1,5 +1,5 @@
 import { MessageCircle, Info } from 'lucide-react';
-import { Card } from './card';
+import { Card } from '@casebase-demo/ui-components';
 
 export function EmptyChat() {
   return (

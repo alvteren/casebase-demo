@@ -1,10 +1,8 @@
 import { useRef, forwardRef, useImperativeHandle, useState } from 'react';
-import { Card, CardContent } from './card';
-import { Button } from './button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
+import { Card, CardContent, Button, Tooltip, TooltipContent, TooltipTrigger } from '@casebase-demo/ui-components';
 import { cn, exportElementToPdf } from '@casebase-demo/utils';
 import { User, Bot, ChevronDown, ChevronUp, Download } from 'lucide-react';
-import { Markdown } from './markdown';
+import { Markdown } from '@casebase-demo/ui-components';
 import { ChatMessage, ContextItem } from '@casebase-demo/shared-types';
 
 interface MessageProps {

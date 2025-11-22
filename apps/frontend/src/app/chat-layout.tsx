@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { ChatSidebar, SidebarProvider, SidebarInset, SidebarTrigger } from '@casebase-demo/ui-components';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@casebase-demo/ui-components';
+import { ChatSidebar } from '@casebase-demo/feature-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 
 export function ChatLayout() {

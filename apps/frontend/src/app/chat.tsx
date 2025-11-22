@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Snackbar, Message, Button, Input, Card, ScrollArea, EmptyChat, DocumentsDialog, type MessageRef } from '@casebase-demo/ui-components';
+import { Snackbar, Button, Input, Card, ScrollArea } from '@casebase-demo/ui-components';
+import { Message, EmptyChat, DocumentsDialog } from '@casebase-demo/feature-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 import { chatService, uploadService } from '@casebase-demo/api-services';
 import { ChatMessage, ChatHistoryMessage } from '@casebase-demo/shared-types';

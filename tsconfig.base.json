@@ -18,7 +18,10 @@
       "@casebase-demo/ui-components": ["libs/ui-components/src/index.ts"],
       "@casebase-demo/api-services": ["libs/api-services/src/index.ts"],
       "@casebase-demo/utils": ["libs/utils/src/index.ts"],
-      "@casebase-demo/shared-types": ["libs/shared-types/src/index.ts"]
+      "@casebase-demo/shared-types": ["libs/shared-types/src/index.ts"],
+      "@casebase-demo/feature-components": [
+        "libs/feature-components/src/index.ts"
+      ]
     }
   },
   "include": ["env.d.ts"],

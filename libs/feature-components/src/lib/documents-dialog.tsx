@@ -5,12 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from './dialog';
-import { Button } from './button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
-import { ScrollArea } from './scroll-area';
-import { Card } from './card';
-import { FileDropZone } from './file-drop-zone';
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  ScrollArea,
+  Card,
+  FileDropZone,
+} from '@casebase-demo/ui-components';
 import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
 import { documentsService, uploadService } from '@casebase-demo/api-services';
 import { formatDate } from '@casebase-demo/utils';
