@@ -12,7 +12,7 @@ export interface DocumentResponse {
   document: DocumentSummary;
 }
 
-export class DocumentsService {
+export class DocumentsApiService {
   private readonly baseUrl = (process.env["REACT_APP_BACKEND_URL"]);
 
   /**
@@ -112,5 +112,5 @@ export class DocumentsService {
 }
 
 // Export singleton instance
-export const documentsService = new DocumentsService();
+export const documentsApiService = new DocumentsApiService();
 

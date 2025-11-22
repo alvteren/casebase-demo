@@ -14,7 +14,7 @@ import {
   FileDropZone,
 } from '@casebase-demo/ui-components';
 import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
-import { documentsService, uploadService } from '@casebase-demo/api-services';
+import { documentsApiService, uploadService } from '@casebase-demo/api-services';
 import { formatDate } from '@casebase-demo/utils';
 import { DocumentSummary } from '@casebase-demo/shared-types';
 
@@ -40,7 +40,7 @@ export function DocumentsDialog({
     setLoading(true);
     setError(null);
     try {
-      const response = await documentsService.getAllDocuments();
+      const response = await documentsApiService.getAllDocuments();
       setDocuments(response.documents || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load documents');
@@ -126,7 +126,7 @@ export function DocumentsDialog({
     setError(null);
 
     try {
-      await documentsService.deleteDocument(documentId);
+      await documentsApiService.deleteDocument(documentId);
       await loadDocuments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete document');
