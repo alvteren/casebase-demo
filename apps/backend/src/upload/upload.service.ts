@@ -77,6 +77,7 @@ export class UploadService {
               chunkIndex: i,
               totalChunks: chunks.length,
               contentType: file.mimetype,
+              size: file.size,
               uploadedAt: new Date(),
               text: chunk,
             },

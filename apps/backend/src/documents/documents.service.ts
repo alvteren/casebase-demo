@@ -47,7 +47,7 @@ export class DocumentsService {
               documentId: firstChunk.documentId,
               filename: firstChunk.filename,
               contentType: firstChunk.contentType || 'unknown',
-              size: 0, // Size not stored in metadata, would need to be added
+              size: firstChunk.size || 0,
               chunkCount: firstChunk.totalChunks,
               uploadedAt: firstChunk.uploadedAt || new Date(),
             });
@@ -94,7 +94,7 @@ export class DocumentsService {
         documentId: firstChunk.documentId,
         filename: firstChunk.filename,
         contentType: firstChunk.contentType || 'unknown',
-        size: 0, // Size not stored in metadata
+        size: firstChunk.size || 0,
         chunkCount: firstChunk.totalChunks,
         uploadedAt: firstChunk.uploadedAt || new Date(),
       };

@@ -9,6 +9,7 @@ export interface DocumentMetadata {
   chunkIndex: number;
   totalChunks: number;
   contentType?: string;
+  size?: number;
   uploadedAt?: Date;
 }
 
@@ -265,6 +266,7 @@ export class VectorStoreService implements OnModuleInit {
         chunkIndex: result.metadata.chunkIndex,
         totalChunks: result.metadata.totalChunks,
         contentType: result.metadata.contentType,
+        size: result.metadata.size,
         uploadedAt: result.metadata.uploadedAt
           ? new Date(result.metadata.uploadedAt)
           : undefined,
