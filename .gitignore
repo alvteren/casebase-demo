@@ -33,3 +33,5 @@ lerna-debug.log*
 
 # Docker
 docker-compose.override.yml
+
+.DS_Store
