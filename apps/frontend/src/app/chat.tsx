@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Snackbar, Button, Input, Card, ScrollArea, Tooltip, TooltipContent, TooltipTrigger } from '@casebase-demo/ui-components';
+import { Snackbar, Button, Input, Card, ScrollArea, Tooltip, TooltipContent, TooltipTrigger, FileDropZone } from '@casebase-demo/ui-components';
 import { Message, EmptyChat, DocumentsDialog } from '@casebase-demo/feature-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 import { chatService, uploadService } from '@casebase-demo/api-services';
@@ -283,10 +283,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     setSnackbarOpen(false);
   }, []);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFileUpload = async (file: File) => {
     setUploading(true);
     setError(null);
 
@@ -306,6 +303,16 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await handleFileUpload(file);
+  };
+
+  const handleFileDrop = async (file: File) => {
+    await handleFileUpload(file);
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
@@ -322,44 +329,51 @@ export function Chat({ chatId: propChatId }: ChatProps) {
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages container */}
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full px-6 py-4">
-          <div className="flex flex-col space-y-4">
-          {loadingHistory ? (
-            <div className="flex justify-center items-center h-full">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <FileDropZone
+          onFileDrop={handleFileDrop}
+          disabled={loading || uploading}
+          overlayText="Drop file here to upload"
+          overlaySubtext="Supported formats: PDF, DOCX, DOC, TXT"
+          className="h-full"
+        >
+          <ScrollArea className="h-full px-6 py-4">
+            <div className="flex flex-col space-y-4">
+            {loadingHistory ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : messages.length === 0 ? (
+              <EmptyChat />
+            ) : null}
+
+            { messages.map((message, index) => (
+              message.content && (<Message
+                key={index}
+                message={message}
+                onExportSuccess={message.role === 'assistant' ? handleExportSuccess : undefined}
+                onExportError={message.role === 'assistant' ? handleExportError : undefined}
+              />)
+            ))}
+
+            {loading && !(messages[messages.length - 1]?.content) && (
+              <div className="flex justify-start">
+                <Card className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-muted-foreground">Thinking...</span>
+                  </div>
+                </Card>
+              </div>
+            )}
+
+              <div ref={messagesEndRef} />
             </div>
-          ) : messages.length === 0 ? (
-            <EmptyChat />
-          ) : null}
-
-          { messages.map((message, index) => (
-            message.content && (<Message
-              key={index}
-              message={message}
-              onExportSuccess={message.role === 'assistant' ? handleExportSuccess : undefined}
-              onExportError={message.role === 'assistant' ? handleExportError : undefined}
-            />)
-          ))}
-
-          {loading && !(messages[messages.length - 1]?.content) && (
-            <div className="flex justify-start">
-              <Card className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-muted-foreground">Thinking...</span>
-                </div>
-              </Card>
-            </div>
-          )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+          </ScrollArea>
+        </FileDropZone>
       </div>
 
-      {/* Error message */}
       {error && (
         <div className="px-6 py-2">
           <Card className="bg-destructive/10 border-destructive text-destructive px-4 py-3">
@@ -368,7 +382,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
         </div>
       )}
 
-      {/* Input */}
       <div className="bg-card border-t border-border px-6 py-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
@@ -426,14 +439,12 @@ export function Chat({ chatId: propChatId }: ChatProps) {
         </form>
       </div>
 
-      {/* Snackbar */}
       <Snackbar
         message={snackbarMessage}
         open={snackbarOpen}
         onClose={handleSnackbarClose}
       />
 
-      {/* Documents Dialog */}
       <DocumentsDialog
         open={documentsDialogOpen}
         onOpenChange={setDocumentsDialogOpen}

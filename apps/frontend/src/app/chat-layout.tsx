@@ -20,6 +20,10 @@ export function ChatLayout() {
     setLastChatId(chatId);
   };
 
+  const outletContext = {
+    refreshChatList: () => setRefreshTrigger((prev) => prev + 1)
+  };
+
   return (
     <SidebarProvider className="flex flex-row h-screen w-full">
       <ChatSidebar 
@@ -32,7 +36,7 @@ export function ChatLayout() {
           <SidebarTrigger />
         </header>
         <div className="flex flex-1 flex-col overflow-hidden">
-          <Outlet context={{ refreshChatList: () => setRefreshTrigger((prev) => prev + 1) }} />
+          <Outlet context={outletContext} />
         </div>
       </SidebarInset>
     </SidebarProvider>
