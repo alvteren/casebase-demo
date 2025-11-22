@@ -3,7 +3,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuAction,
-  Button,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -88,28 +87,25 @@ export const ChatSidebarItem = memo(({
         )}
       </SidebarMenuButton>
       {!isCollapsed && (
-        <SidebarMenuAction showOnHover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Delete chat</p>
-            </TooltipContent>
-          </Tooltip>
-        </SidebarMenuAction>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarMenuAction
+              showOnHover
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="h-6 w-6"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 text-destructive" />
+              )}
+            </SidebarMenuAction>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Delete chat</p>
+          </TooltipContent>
+        </Tooltip>
       )}
     </SidebarMenuItem>
   );
