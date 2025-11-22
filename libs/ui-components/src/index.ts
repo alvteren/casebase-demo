@@ -15,3 +15,4 @@ export * from './lib/sidebar';
 export * from './lib/separator';
 export * from './lib/sheet';
 export * from './lib/skeleton';
+export * from './lib/file-drop-zone';

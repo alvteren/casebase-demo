@@ -10,6 +10,7 @@ import { Button } from './button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 import { ScrollArea } from './scroll-area';
 import { Card } from './card';
+import { FileDropZone } from './file-drop-zone';
 import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
 import { documentsService, uploadService, DocumentSummary } from '@casebase-demo/api-services';
 import { formatDate } from '@casebase-demo/utils';
@@ -55,10 +56,24 @@ export function DocumentsDialog({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const validateFile = (file: File): boolean | string => {
+    const validTypes = ['.pdf', '.docx', '.doc', '.txt'];
+    const fileName = file.name.toLowerCase();
+    const isValidType = validTypes.some(type => fileName.endsWith(type));
+    
+    if (!isValidType) {
+      return 'Invalid file type. Please upload PDF, DOCX, DOC, or TXT files only.';
+    }
+    
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return 'File size exceeds 10MB limit.';
+    }
+    
+    return true;
+  };
 
+  const handleFileUpload = async (file: File) => {
     setUploading(true);
     setError(null);
 
@@ -73,6 +88,29 @@ export function DocumentsDialog({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validationResult = validateFile(file);
+    if (validationResult === true) {
+      await handleFileUpload(file);
+    } else if (typeof validationResult === 'string') {
+      setError(validationResult);
+    }
+  };
+
+  const handleFileDrop = async (file: File) => {
+    if (uploading) return;
+
+    const validationResult = validateFile(file);
+    if (validationResult === true) {
+      await handleFileUpload(file);
+    } else if (typeof validationResult === 'string') {
+      setError(validationResult);
     }
   };
 
@@ -104,15 +142,25 @@ export function DocumentsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Documents Library</DialogTitle>
           <DialogDescription>
-            Manage your uploaded documents. Upload new files or delete existing ones.
+            Manage your uploaded documents. Upload new files or delete existing ones. You can also drag and drop files here.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
+        <FileDropZone
+          onFileDrop={handleFileDrop}
+          accept={['.pdf', '.docx', '.doc', '.txt']}
+          maxSize={10 * 1024 * 1024} // 10MB
+          validateFile={validateFile}
+          disabled={uploading}
+          overlayText="Drop file here to upload"
+          overlaySubtext="Supports PDF, DOCX, DOC, TXT"
+          className="flex flex-col gap-4 flex-1 min-h-0 overflow-hidden relative"
+        >
+
           {/* Upload Button */}
           <div className="flex justify-end shrink-0">
             <input
@@ -161,7 +209,7 @@ export function DocumentsDialog({
                 <FileText className="w-12 h-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No documents uploaded yet</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Click "Upload Document" to add your first document
+                  Click "Upload Document" or drag and drop files here to add your first document
                 </p>
               </div>
             ) : (
@@ -207,7 +255,7 @@ export function DocumentsDialog({
             )}
             </ScrollArea>
           </div>
-        </div>
+        </FileDropZone>
       </DialogContent>
     </Dialog>
   );
