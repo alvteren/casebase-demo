@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Snackbar, Button, Input, Card, ScrollArea } from '@casebase-demo/ui-components';
+import { Snackbar, Button, Input, Card, ScrollArea, Tooltip, TooltipContent, TooltipTrigger } from '@casebase-demo/ui-components';
 import { Message, EmptyChat, DocumentsDialog } from '@casebase-demo/feature-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 import { chatService, uploadService } from '@casebase-demo/api-services';
@@ -386,20 +386,26 @@ export function Chat({ chatId: propChatId }: ChatProps) {
             onChange={handleFileChange}
             className="hidden"
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleUploadClick}
-            disabled={loading || uploading}
-            title="Upload document"
-          >
-            {uploading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Paperclip className="w-4 h-4" />
-            )}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleUploadClick}
+                disabled={loading || uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Paperclip className="w-4 h-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Upload document to your library</p>
+            </TooltipContent>
+          </Tooltip>
           <Button
             type="submit"
             disabled={!input.trim() || loading}
