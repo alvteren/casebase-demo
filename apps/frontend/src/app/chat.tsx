@@ -283,6 +283,10 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     setSnackbarOpen(false);
   }, []);
 
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  }, []);
+
   const handleFileUpload = async (files: File[]) => {
     if (files.length === 0) return;
 
@@ -418,7 +422,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
           <Input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Ask a question about your documents..."
             disabled={loading}
             className="flex-1"
