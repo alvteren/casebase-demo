@@ -283,34 +283,64 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     setSnackbarOpen(false);
   }, []);
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+
     setUploading(true);
     setError(null);
 
-    try {
-      await uploadService.uploadFile(file);
-      handleUploadSuccess();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to upload file';
+    const uploadResults: { success: number; failed: number; errors: string[] } = {
+      success: 0,
+      failed: 0,
+      errors: [],
+    };
+
+    // Upload files sequentially to avoid overwhelming the server
+    for (const file of files) {
+      try {
+        await uploadService.uploadFile(file);
+        uploadResults.success++;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to upload file';
+        uploadResults.failed++;
+        uploadResults.errors.push(`${file.name}: ${errorMessage}`);
+      }
+    }
+
+    // Show appropriate message based on results
+    if (uploadResults.success > 0 && uploadResults.failed === 0) {
+      const message = files.length === 1 
+        ? 'Document uploaded and indexed successfully!'
+        : `${uploadResults.success} documents uploaded and indexed successfully!`;
+      setSnackbarMessage(message);
+      setSnackbarOpen(true);
+    } else if (uploadResults.success > 0 && uploadResults.failed > 0) {
+      setSnackbarMessage(
+        `${uploadResults.success} file(s) uploaded successfully, ${uploadResults.failed} failed`
+      );
+      setSnackbarOpen(true);
+      setError(uploadResults.errors.join('; '));
+    } else {
+      const errorMessage = uploadResults.errors.join('; ') || 'Failed to upload files';
       setError(errorMessage);
       setSnackbarMessage(`Upload failed: ${errorMessage}`);
       setSnackbarOpen(true);
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await handleFileUpload(file);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    await handleFileUpload(Array.from(files));
   };
 
-  const handleFileDrop = async (file: File) => {
-    await handleFileUpload(file);
+  const handleFileDrop = async (files: File[]) => {
+    await handleFileUpload(files);
   };
 
   return (
@@ -334,7 +364,8 @@ export function Chat({ chatId: propChatId }: ChatProps) {
         <FileDropZone
           onFileDrop={handleFileDrop}
           disabled={loading || uploading}
-          overlayText="Drop file here to upload"
+          multiple
+          overlayText="Drop files here to upload"
           overlaySubtext="Supported formats: PDF, DOCX, DOC, TXT"
           className="h-full"
         >
@@ -396,6 +427,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
             ref={fileInputRef}
             type="file"
             accept=".pdf,.docx,.doc,.txt"
+            multiple
             onChange={handleFileChange}
             className="hidden"
           />

@@ -4,7 +4,7 @@ import { cn } from '@casebase-demo/utils';
 
 export interface FileDropZoneProps {
   children: ReactNode;
-  onFileDrop: (file: File) => void | Promise<void>;
+  onFileDrop: (files: File[]) => void | Promise<void>;
   accept?: string[];
   maxSize?: number; // in bytes
   disabled?: boolean;
@@ -12,6 +12,7 @@ export interface FileDropZoneProps {
   className?: string;
   overlayText?: string;
   overlaySubtext?: string;
+  multiple?: boolean;
 }
 
 export function FileDropZone({
@@ -24,6 +25,7 @@ export function FileDropZone({
   className,
   overlayText = 'Drop file here to upload',
   overlaySubtext,
+  multiple = false,
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const dragCounterRef = useRef(0);
@@ -94,14 +96,32 @@ export function FileDropZone({
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      const file = files[0];
-      const validationResult = validate(file);
-      
-      if (validationResult === true) {
-        await onFileDrop(file);
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
+
+      for (const file of files) {
+        const validationResult = validate(file);
+        if (validationResult === true) {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(`${file.name}: ${validationResult}`);
+        }
       }
-      // If validation returns an error message, the parent component should handle it
-      // We just don't call onFileDrop if validation fails
+
+      if (validFiles.length > 0) {
+        if (multiple) {
+          await onFileDrop(validFiles);
+        } else {
+          await onFileDrop([validFiles[0]]);
+        }
+      }
+
+      // If there are invalid files, we could emit an event or callback
+      // For now, we just don't upload invalid files
+      if (invalidFiles.length > 0 && validFiles.length === 0) {
+        // All files were invalid - could show error here
+        console.warn('Invalid files:', invalidFiles);
+      }
     }
   };
 

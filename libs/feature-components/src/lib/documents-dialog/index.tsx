@@ -74,44 +74,98 @@ export function DocumentsDialog({
     return true;
   };
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+
     setUploading(true);
     setError(null);
 
-    try {
-      await uploadService.uploadFile(file);
-      await loadDocuments();
-      onUploadSuccess?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload file');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+    const uploadResults: { success: number; failed: number; errors: string[] } = {
+      success: 0,
+      failed: 0,
+      errors: [],
+    };
+
+    // Upload files sequentially to avoid overwhelming the server
+    for (const file of files) {
+      try {
+        await uploadService.uploadFile(file);
+        uploadResults.success++;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to upload file';
+        uploadResults.failed++;
+        uploadResults.errors.push(`${file.name}: ${errorMessage}`);
       }
+    }
+
+    // Reload documents list after all uploads complete
+    await loadDocuments();
+
+    // Show appropriate message based on results
+    if (uploadResults.success > 0) {
+      onUploadSuccess?.();
+      if (uploadResults.failed > 0) {
+        setError(
+          `${uploadResults.success} file(s) uploaded successfully, ${uploadResults.failed} failed: ${uploadResults.errors.join('; ')}`
+        );
+      }
+    } else {
+      const errorMessage = uploadResults.errors.join('; ') || 'Failed to upload files';
+      setError(errorMessage);
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const validationResult = validateFile(file);
-    if (validationResult === true) {
-      await handleFileUpload(file);
-    } else if (typeof validationResult === 'string') {
-      setError(validationResult);
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const validationResult = validateFile(file);
+      if (validationResult === true) {
+        validFiles.push(file);
+      } else if (typeof validationResult === 'string') {
+        invalidFiles.push(`${file.name}: ${validationResult}`);
+      }
+    }
+
+    if (invalidFiles.length > 0) {
+      setError(invalidFiles.join('; '));
+    }
+
+    if (validFiles.length > 0) {
+      await handleFileUpload(validFiles);
     }
   };
 
-  const handleFileDrop = async (file: File) => {
+  const handleFileDrop = async (files: File[]) => {
     if (uploading) return;
 
-    const validationResult = validateFile(file);
-    if (validationResult === true) {
-      await handleFileUpload(file);
-    } else if (typeof validationResult === 'string') {
-      setError(validationResult);
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    for (const file of files) {
+      const validationResult = validateFile(file);
+      if (validationResult === true) {
+        validFiles.push(file);
+      } else if (typeof validationResult === 'string') {
+        invalidFiles.push(`${file.name}: ${validationResult}`);
+      }
+    }
+
+    if (invalidFiles.length > 0) {
+      setError(invalidFiles.join('; '));
+    }
+
+    if (validFiles.length > 0) {
+      await handleFileUpload(validFiles);
     }
   };
 
@@ -157,7 +211,8 @@ export function DocumentsDialog({
           maxSize={10 * 1024 * 1024} // 10MB
           validateFile={validateFile}
           disabled={uploading}
-          overlayText="Drop file here to upload"
+          multiple
+          overlayText="Drop files here to upload"
           overlaySubtext="Supports PDF, DOCX, DOC, TXT"
           className="flex flex-col gap-4 flex-1 min-h-0 overflow-hidden relative"
         >
@@ -168,6 +223,7 @@ export function DocumentsDialog({
               ref={fileInputRef}
               type="file"
               accept=".pdf,.docx,.doc,.txt"
+              multiple
               onChange={handleFileChange}
               className="hidden"
             />
