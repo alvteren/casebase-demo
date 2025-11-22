@@ -11,3 +11,7 @@ export * from './lib/markdown';
 export * from './lib/chat-sidebar';
 export * from './lib/badge';
 export * from './lib/tooltip';
+export * from './lib/sidebar';
+export * from './lib/separator';
+export * from './lib/sheet';
+export * from './lib/skeleton';

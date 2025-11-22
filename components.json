@@ -12,6 +12,10 @@
   },
   "aliases": {
     "components": "libs/ui-components/src/lib",
+    "ui": "libs/ui-components/src/lib",
+    "utils": "libs/utils/src/lib",
+    "hooks": "libs/utils/src/lib",
+    "lib": "libs/utils/src/lib"
   },
   "registries": {
     "@acme": "https://acme.com/r/{name}.json"
