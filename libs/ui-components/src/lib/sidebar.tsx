@@ -28,7 +28,7 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
+const SIDEBAR_WIDTH_ICON = "4rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContextProps = {
@@ -279,19 +279,32 @@ const SidebarTrigger = React.forwardRef<
     toggleSidebar()
   }, [onClick, toggleSidebar])
 
+  const isMac = React.useMemo(() => {
+    if (typeof navigator === "undefined") return false
+    return navigator.userAgent.includes("Mac")
+  }, [])
+  const shortcutKey = isMac ? "⌘" : "Ctrl"
+
   return (
-    <Button
-      ref={ref}
-      data-sidebar="trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7", className)}
-      onClick={handleClick}
-      {...props}
-    >
-      <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          ref={ref}
+          data-sidebar="trigger"
+          variant="ghost"
+          size="icon"
+          className={cn("h-7 w-7", className)}
+          onClick={handleClick}
+          {...props}
+        >
+          <PanelLeft />
+          <span className="sr-only">Toggle Sidebar</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <span>Toggle Sidebar ({shortcutKey}+{SIDEBAR_KEYBOARD_SHORTCUT.toUpperCase()})</span>
+      </TooltipContent>
+    </Tooltip>
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"
