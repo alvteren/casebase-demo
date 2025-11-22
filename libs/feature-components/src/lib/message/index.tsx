@@ -4,6 +4,7 @@ import { cn, exportElementToPdf } from '@casebase-demo/utils';
 import { User, Bot, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { Markdown } from '@casebase-demo/ui-components';
 import { ChatMessage, ContextItem } from '@casebase-demo/shared-types';
+import { MessagePdfContent } from './message-pdf-content';
 
 interface MessageProps {
   message: ChatMessage & { timestamp: Date };
@@ -163,45 +164,10 @@ export const Message = forwardRef<MessageRef, MessageProps>(({
       {/* This is the hidden PDF version of the message */}
       <div className="-z-50" ref={messageRef}>
         {isPdfVersion && (
-          <div className="flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <Markdown className={isUser ? 'text-white' : 'text-card-foreground'}>{message.content}</Markdown>
-              </div>
-            </div>
-            
-              {message.context && message.context.length > 0 && (
-                <div className="mt-2">
-                    <b>Used sources ({message.context.length})</b>
-                    
-                    <div className="mt-2 space-y-2">
-                      {message.context.map((item: ContextItem, ctxIndex: number) => (
-                        <Card
-                          key={ctxIndex}
-                          className={cn(
-                            'text-xs p-2',
-                            isUser
-                              ? 'bg-accent/20 text-accent-foreground/90'
-                              : 'bg-muted text-muted-foreground'
-                          )}
-                        >
-                          <div className="font-semibold mb-1">
-                            Source {ctxIndex + 1}
-                            {item.source && ` - ${item.source}`}
-                            <span className="ml-2 opacity-75">
-                              (Score: {item.score.toFixed(3)})
-                            </span>
-                          </div>
-                          <div className="opacity-90">
-                            {item.text.substring(0, 200)}
-                            {item.text.length > 200 && '...'}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                </div>
-              )}
-          </div>
+          <MessagePdfContent
+            content={message.content}
+            context={message.context}
+          />
         )}
       </div>
     </>
