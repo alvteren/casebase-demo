@@ -1,11 +1,5 @@
-export interface DocumentSummary {
-  documentId: string;
-  filename: string;
-  contentType: string;
-  size: number;
-  chunkCount: number;
-  uploadedAt: string;
-}
+import { DocumentSummary } from "@casebase-demo/shared-types";
+
 
 export interface DocumentsListResponse {
   success: boolean;

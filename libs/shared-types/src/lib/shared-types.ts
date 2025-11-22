@@ -119,6 +119,7 @@ export interface DocumentMetadata {
   documentId: string;
   filename: string;
   chunkIndex: number;
+  size: number;
   totalChunks: number;
   contentType?: string;
   uploadedAt?: Date;

@@ -4,16 +4,7 @@ import { VectorStoreService } from '../vector-store/vector-store.service';
 import * as mammoth from 'mammoth';
 import {PDFParse} from 'pdf-parse';
 import { randomUUID } from 'crypto';
-
-export interface UploadedDocument {
-  documentId: string;
-  filename: string;
-  contentType: string;
-  size: number;
-  chunkCount: number;
-  uploadedAt: Date;
-  text?: string;
-}
+import { UploadedDocument } from '@casebase-demo/shared-types';
 
 @Injectable()
 export class UploadService {

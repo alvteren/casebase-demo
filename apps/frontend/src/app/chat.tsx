@@ -253,11 +253,6 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     }
   };
 
-
-
-
- 
-
   const handleExportSuccess = () => {
     setSnackbarMessage('Message exported to PDF successfully');
     setSnackbarOpen(true);
@@ -306,7 +301,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">RAG Chat</h1>
+        <h1 className="text-2xl font-bold text-foreground">Chat</h1>
         <div className="flex items-center gap-3">
           <Button
             onClick={() => setDocumentsDialogOpen(true)}

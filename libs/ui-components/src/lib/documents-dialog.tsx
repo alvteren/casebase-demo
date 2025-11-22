@@ -12,8 +12,9 @@ import { ScrollArea } from './scroll-area';
 import { Card } from './card';
 import { FileDropZone } from './file-drop-zone';
 import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
-import { documentsService, uploadService, DocumentSummary } from '@casebase-demo/api-services';
+import { documentsService, uploadService } from '@casebase-demo/api-services';
 import { formatDate } from '@casebase-demo/utils';
+import { DocumentSummary } from '@casebase-demo/shared-types';
 
 interface DocumentsDialogProps {
   open: boolean;

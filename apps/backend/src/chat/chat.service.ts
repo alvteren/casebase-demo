@@ -338,7 +338,7 @@ Otherwise, use your general knowledge to provide helpful answers.`;
   private async compressContext(
     context: string,
     userQuestion: string,
-    maxSummaryTokens: number = 500,
+    maxSummaryTokens = 500,
   ): Promise<string> {
     try {
       // If context is already short, skip compression

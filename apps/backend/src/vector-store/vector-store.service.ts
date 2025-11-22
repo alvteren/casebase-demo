@@ -2,16 +2,7 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { OpenAIService } from '../openai/openai.service';
-
-export interface DocumentMetadata {
-  documentId: string;
-  filename: string;
-  chunkIndex: number;
-  totalChunks: number;
-  contentType?: string;
-  size?: number;
-  uploadedAt?: Date;
-}
+import { DocumentMetadata } from '@casebase-demo/shared-types';
 
 export interface VectorWithMetadata {
   id: string;

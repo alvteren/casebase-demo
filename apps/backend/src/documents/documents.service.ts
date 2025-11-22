@@ -1,15 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { VectorStoreService } from '../vector-store/vector-store.service';
-import { UploadService, UploadedDocument } from '../upload/upload.service';
+import { UploadService } from '../upload/upload.service';
+import { UploadedDocument } from '@casebase-demo/shared-types';
 
-export interface DocumentSummary {
-  documentId: string;
-  filename: string;
-  contentType: string;
-  size: number;
-  chunkCount: number;
-  uploadedAt: Date;
-}
 
 @Injectable()
 export class DocumentsService {
@@ -23,7 +16,7 @@ export class DocumentsService {
   /**
    * Get list of all documents
    */
-  async getAllDocuments(): Promise<DocumentSummary[]> {
+  async getAllDocuments(): Promise<UploadedDocument[]> {
     try {
       const documentIds = await this.vectorStoreService.getAllDocumentIds();
 
@@ -32,7 +25,7 @@ export class DocumentsService {
       }
 
       // Get metadata for each document
-      const documents: DocumentSummary[] = [];
+      const documents: UploadedDocument[] = [];
 
       for (const documentId of documentIds) {
         try {
@@ -79,7 +72,7 @@ export class DocumentsService {
   /**
    * Get single document by ID
    */
-  async getDocumentById(documentId: string): Promise<DocumentSummary> {
+  async getDocumentById(documentId: string): Promise<UploadedDocument> {
     try {
       const metadata = await this.vectorStoreService.getDocumentMetadata(
         documentId,
