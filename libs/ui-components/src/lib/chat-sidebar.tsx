@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuAction,
+  SidebarRail,
+  useSidebar,
+} from './sidebar';
 import { Button } from './button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
-import { ScrollArea } from './scroll-area';
-import { Card } from './card';
 import { Badge } from './badge';
 import { chatService, ChatHistoryListItem } from '@casebase-demo/api-services';
 import { Plus, MessageSquare, Loader2, Trash2 } from 'lucide-react';
@@ -21,6 +33,7 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
   const [deleting, setDeleting] = useState<string | null>(null);
   const navigate = useNavigate();
   const { chatId: currentChatId } = useParams<{ chatId?: string }>();
+  const { state } = useSidebar();
 
   const loadChats = async () => {
     try {
@@ -36,12 +49,9 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
     }
   };
 
-
-  // Refresh when trigger changes
+  // Load chats on mount and when trigger changes
   useEffect(() => {
-    if (refreshTrigger !== undefined) {
-      loadChats();
-    }
+    loadChats();
   }, [refreshTrigger]);
 
   const handleChatClick = (chatId: string) => {
@@ -78,28 +88,29 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
   };
 
   return (
-    <div className="flex flex-col h-full bg-card border-r border-border">
-      {/* Header */}
-      <div className="p-4 border-b border-border flex justify-end">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={onNewChat}
-              variant="outline"
-              size="icon"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>New Chat</p>
-          </TooltipContent>
-        </Tooltip>
+    <Sidebar variant="inset" collapsible="icon" side="left">
+      <SidebarHeader>
+        <div className="flex justify-end p-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+        <Button
+          onClick={onNewChat}
+                variant="outline"
+                size="icon"
+        >
+                <Plus className="w-4 h-4" />
+        </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>New Chat</p>
+            </TooltipContent>
+          </Tooltip>
       </div>
-
-      {/* Chat List */}
-      <ScrollArea className="flex-1">
-        <div className="p-2">
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -107,97 +118,91 @@ export function ChatSidebar({ onNewChat, onChatSelect, refreshTrigger }: ChatSid
           ) : chats.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>No chat history</p>
+                <p className={cn(state === 'collapsed' && 'hidden')}>No chat history</p>
             </div>
           ) : (
-            <div className="space-y-1">
-              {chats.map((chat) => {
-                const isActive = currentChatId === chat.chatId;
-                return (
-                  <Card
-                    key={chat.chatId}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Chat from ${formatDate(chat.updatedAt)}`}
-                    className={cn(
-                      'p-3 cursor-pointer transition-all group relative border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                      isActive
-                        ? 'border-primary'
-                        : 'hover:bg-accent border-transparent'
-                    )}
-                    style={isActive ? { backgroundColor: 'hsl(var(--primary) / 0.15)' } : undefined}
-                    onClick={() => handleChatClick(chat.chatId)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleChatClick(chat.chatId);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+              <SidebarMenu>
+                {chats.map((chat) => {
+                  const isActive = currentChatId === chat.chatId;
+                  return (
+                    <SidebarMenuItem key={chat.chatId}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        tooltip={state === 'collapsed' ? formatDate(chat.updatedAt) : undefined}
+                  onClick={() => handleChatClick(chat.chatId)}
+                        className="flex flex-col gap-1 items-start h-auto py-2"
+                      >
+                        <div className="flex items-center gap-2 w-full">
                           <MessageSquare className={cn(
                             'w-4 h-4 shrink-0',
                             isActive ? 'text-primary' : 'text-muted-foreground'
                           )} />
-                          <span className={cn(
-                            'text-xs',
-                            isActive ? 'text-primary font-medium' : 'text-muted-foreground'
-                          )}>
-                            {formatDate(chat.updatedAt)}
-                          </span>
-                        </div>
-                        {chat.lastMessage ? (
+                          {state !== 'collapsed' && (
+                            <>
+                              <span className={cn(
+                                'text-xs flex-1 text-left',
+                                isActive ? 'text-primary font-medium' : 'text-muted-foreground'
+                              )}>
+                          {formatDate(chat.updatedAt)}
+                        </span>
+                              <Badge variant={isActive ? 'default' : 'secondary'} className="text-xs shrink-0">
+                                {chat.messageCount}
+                              </Badge>
+                            </>
+                          )}
+                      </div>
+                        {state !== 'collapsed' && chat.lastMessage && (
                           <p className={cn(
-                            'text-sm line-clamp-2',
+                            'text-sm line-clamp-2 text-left w-full',
                             isActive ? 'text-foreground font-medium' : 'text-foreground'
                           )}>
-                            {truncateText(chat.lastMessage.content)}
-                          </p>
-                        ) : (
+                          {truncateText(chat.lastMessage.content)}
+                        </p>
+                        )}
+                        {state !== 'collapsed' && !chat.lastMessage && (
                           <p className={cn(
-                            'text-sm',
+                            'text-sm text-left w-full',
                             isActive ? 'text-muted-foreground' : 'text-muted-foreground'
                           )}>
                             Empty chat
                           </p>
                         )}
-                        <div className="mt-1">
-                          <Badge variant={isActive ? 'default' : 'secondary'} className="text-xs">
-                            {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
-                          </Badge>
-                        </div>
-                      </div>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleDelete(e, chat.chatId)}
-                          disabled={deleting === chat.chatId}
-                        >
-                          {deleting === chat.chatId ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Delete chat</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </Card>
-                );
-              })}
-            </div>
+                      </SidebarMenuButton>
+                      {state !== 'collapsed' && (
+                        <SidebarMenuAction showOnHover>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                                className="h-6 w-6"
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleDelete(e, chat.chatId)}
+                      disabled={deleting === chat.chatId}
+                    >
+                      {deleting === chat.chatId ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      )}
+                    </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Delete chat</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </SidebarMenuAction>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
           )}
-        </div>
-      </ScrollArea>
-    </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter />
+      <SidebarRail />
+    </Sidebar>
   );
 }
-
