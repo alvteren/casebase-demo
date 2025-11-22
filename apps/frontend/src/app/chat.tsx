@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Snackbar, Button, Input, Card, ScrollArea } from '@casebase-demo/ui-components';
 import { Message, EmptyChat, DocumentsDialog } from '@casebase-demo/feature-components';
@@ -275,6 +275,14 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     fileInputRef.current?.click();
   };
 
+  const handleDocumentsDialogOpen = useCallback(() => {
+    setDocumentsDialogOpen(true);
+  }, []);
+
+  const handleSnackbarClose = useCallback(() => {
+    setSnackbarOpen(false);
+  }, []);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -305,7 +313,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
         <h1 className="text-2xl font-bold text-foreground">Chat</h1>
         <div className="flex items-center gap-3">
           <Button
-            onClick={() => setDocumentsDialogOpen(true)}
+            onClick={handleDocumentsDialogOpen}
             variant="default"
           >
             <FolderOpen className="w-4 h-4" />
@@ -416,7 +424,7 @@ export function Chat({ chatId: propChatId }: ChatProps) {
       <Snackbar
         message={snackbarMessage}
         open={snackbarOpen}
-        onClose={() => setSnackbarOpen(false)}
+        onClose={handleSnackbarClose}
       />
 
       {/* Documents Dialog */}

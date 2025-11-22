@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,17 +6,15 @@ import {
   DialogTitle,
   DialogDescription,
   Button,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
   ScrollArea,
   Card,
   FileDropZone,
 } from '@casebase-demo/ui-components';
-import { Upload, Trash2, Loader2, FileText } from 'lucide-react';
+import { Upload, Loader2, FileText } from 'lucide-react';
 import { documentsApiService, uploadService } from '@casebase-demo/api-services';
 import { formatDate } from '@casebase-demo/utils';
 import { DocumentSummary } from '@casebase-demo/shared-types';
+import { DeleteButton } from './delete-button';
 
 interface DocumentsDialogProps {
   open: boolean;
@@ -117,7 +115,7 @@ export function DocumentsDialog({
     }
   };
 
-  const handleDelete = async (documentId: string) => {
+  const handleDelete = useCallback(async (documentId: string) => {
     if (!confirm('Are you sure you want to delete this document?')) {
       return;
     }
@@ -133,7 +131,7 @@ export function DocumentsDialog({
     } finally {
       setDeleting(null);
     }
-  };
+  }, [loadDocuments]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return 'Unknown size';
@@ -232,25 +230,11 @@ export function DocumentsDialog({
                           <p>Uploaded: {formatDate(doc.uploadedAt)}</p>
                         </div>
                       </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(doc.documentId)}
-                            disabled={deleting === doc.documentId}
-                          >
-                            {deleting === doc.documentId ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete document</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <DeleteButton
+                        documentId={doc.documentId}
+                        onDelete={handleDelete}
+                        isDeleting={deleting === doc.documentId}
+                      />
                     </div>
                   </Card>
                 ))}
