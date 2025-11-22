@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Snackbar, Button, Input, Card, ScrollArea, Tooltip, TooltipContent, TooltipTrigger, FileDropZone } from '@casebase-demo/ui-components';
+import { Snackbar, Button, Input, Textarea, Card, ScrollArea, Tooltip, TooltipContent, TooltipTrigger, FileDropZone } from '@casebase-demo/ui-components';
 import { Message, EmptyChat, DocumentsDialog } from '@casebase-demo/feature-components';
 import { setLastChatId, clearLastChatId } from '@casebase-demo/utils';
 import { chatService, uploadService } from '@casebase-demo/api-services';
@@ -283,9 +283,23 @@ export function Chat({ chatId: propChatId }: ChatProps) {
     setSnackbarOpen(false);
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // If Shift+Enter is pressed, allow default behavior (new line)
+    // If Enter is pressed without Shift, submit the form
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim() && !loading) {
+        const form = e.currentTarget.form;
+        if (form) {
+          form.requestSubmit();
+        }
+      }
+    }
+  }, [input, loading]);
 
   const handleFileUpload = async (files: File[]) => {
     if (files.length === 0) return;
@@ -418,14 +432,15 @@ export function Chat({ chatId: propChatId }: ChatProps) {
       )}
 
       <div className="bg-card border-t border-border px-6 py-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            type="text"
+        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+          <Textarea
             value={input}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             placeholder="Ask a question about your documents..."
             disabled={loading}
-            className="flex-1"
+            className="flex-1 max-h-[200px]"
+            rows={1}
           />
           <input
             ref={fileInputRef}
