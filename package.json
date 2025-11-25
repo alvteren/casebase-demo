@@ -3,15 +3,14 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "postinstall": "node .nx/nxw.js --version || true",
-    "build": "node .nx/nxw.js run-many --target=build --projects=backend,frontend",
-    "test": "node .nx/nxw.js run-many --target=test --projects=backend,frontend",
-    "lint": "node .nx/nxw.js run-many --target=lint --projects=backend,frontend",
-    "serve": "node .nx/nxw.js serve",
-    "dev": "node .nx/nxw.js run-many --target=serve --projects=backend,frontend",
-    "start": "node .nx/nxw.js serve backend --configuration=production & node .nx/nxw.js serve-static frontend",
-    "start:backend": "node .nx/nxw.js serve backend --configuration=production",
-    "start:frontend": "node .nx/nxw.js serve-static frontend"
+    "build": "npx nx run-many --target=build --projects=backend,frontend",
+    "test": "npx nx run-many --target=test --projects=backend,frontend",
+    "lint": "npx nx run-many --target=lint --projects=backend,frontend",
+    "serve": "npx nx serve",
+    "dev": "npx nx run-many --target=serve --projects=backend,frontend",
+    "start": "npx nx serve backend --configuration=production & npx nx serve-static frontend",
+    "start:backend": "npx nx serve backend --configuration=production",
+    "start:frontend": "npx nx serve-static frontend"
   },
   "private": true,
   "dependencies": {
@@ -49,7 +48,8 @@
     "rxjs": "^7.8.2",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "nx": "22.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",
@@ -100,7 +100,6 @@
     "jest-environment-node": "^30.0.2",
     "jest-util": "^30.0.2",
     "jsonc-eslint-parser": "^2.1.0",
-    "nx": "22.0.3",
     "postcss": "^8.5.6",
     "postcss-loader": "^8.2.0",
     "prettier": "^3.6.2",
