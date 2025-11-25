@@ -177,11 +177,12 @@ MONGODB_URI=mongodb://localhost:27017/casebase-demo
 #### Frontend Configuration
 - `FRONTEND_URL` (optional) - Frontend URL for CORS configuration (default: `http://localhost:4200`)
   - Can be a comma-separated list of URLs for multiple origins
-- `REACT_APP_BACKEND_URL` (optional) - Backend API URL used by frontend (default: `http://localhost:3000/api`)
+- `REACT_APP_BACKEND_URL` - Backend API URL used by frontend 
   - This variable is used by the frontend to connect to the backend API
 
 #### MongoDB Configuration
-- `MONGODB_URI` (optional) - MongoDB connection string for chat history storage (default: `mongodb://localhost:27017/casebase-demo`)
+- `MONGODB_URI` - MongoDB connection string for chat history storage 
+
   - **MongoDB is automatically started via Docker Compose when you run the backend**
   - The Docker container will be created and started automatically
   - Data is persisted in a Docker volume (`mongodb_data`)

@@ -16,7 +16,7 @@ import { DocumentsModule } from '../documents/documents.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const uri = configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/casebase-demo';
+        const uri = configService.get<string>('MONGODB_URI');
         return {
           uri,
           retryWrites: true,
