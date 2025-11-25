@@ -3,15 +3,15 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "postinstall": "node node_modules/.bin/nx --version || true",
-    "build": "node node_modules/.bin/nx run-many --target=build --projects=backend,frontend",
-    "test": "node node_modules/.bin/nx run-many --target=test --projects=backend,frontend",
-    "lint": "node node_modules/.bin/nx run-many --target=lint --projects=backend,frontend",
-    "serve": "node node_modules/.bin/nx serve",
-    "dev": "node node_modules/.bin/nx run-many --target=serve --projects=backend,frontend",
-    "start": "node node_modules/.bin/nx serve backend --configuration=production & node node_modules/.bin/nx serve-static frontend",
-    "start:backend": "node node_modules/.bin/nx serve backend --configuration=production",
-    "start:frontend": "node node_modules/.bin/nx serve-static frontend"
+    "postinstall": "node node_modules/nx/bin/nx.js --version || true",
+    "build": "node node_modules/nx/bin/nx.js run-many --target=build --projects=backend,frontend",
+    "test": "node node_modules/nx/bin/nx.js run-many --target=test --projects=backend,frontend",
+    "lint": "node node_modules/nx/bin/nx.js run-many --target=lint --projects=backend,frontend",
+    "serve": "node node_modules/nx/bin/nx.js serve",
+    "dev": "node node_modules/nx/bin/nx.js run-many --target=serve --projects=backend,frontend",
+    "start": "node node_modules/nx/bin/nx.js serve backend --configuration=production & node node_modules/nx/bin/nx.js serve-static frontend",
+    "start:backend": "node node_modules/nx/bin/nx.js serve backend --configuration=production",
+    "start:frontend": "node node_modules/nx/bin/nx.js serve-static frontend"
   },
   "private": true,
   "dependencies": {
