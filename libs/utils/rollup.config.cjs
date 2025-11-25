@@ -10,8 +10,19 @@ module.exports = withNx(
     assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
   },
   {
-    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
-    // e.g.
-    // output: { sourcemap: true },
+    output: {
+      sourcemap: true,
+      sourcemapPathTransform: (relativeSourcePath, sourcemapPath) => {
+        // Fix source map paths
+        return relativeSourcePath;
+      },
+    },
+    onwarn(warning, warn) {
+      // Ignore source map warnings
+      if (warning.code === 'SOURCEMAP_ERROR' || warning.message?.includes('source map')) {
+        return;
+      }
+      warn(warning);
+    },
   },
 );
